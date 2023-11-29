@@ -1,0 +1,7 @@
+code/out/
+targets/x86_64/iso/boot/kernel.bin
+kernel.iso
+*.o
+.gdb_history
+.vscode/
+
