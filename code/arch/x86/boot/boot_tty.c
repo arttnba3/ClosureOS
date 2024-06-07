@@ -91,6 +91,7 @@ int boot_putchar_raw(uint16_t ch, uint32_t fg, uint32_t bg)
 
 void boot_putchar(uint16_t ch)
 {
+    int left_ch_nr, space_nr;
     switch (ch) {
     case '\r':
         cursor_x = 0;
@@ -103,8 +104,8 @@ void boot_putchar(uint16_t ch)
         break;
 
     case '\t':
-        int left_ch_nr = max_ch_nr_x - cursor_x - 1;
-        int space_nr = left_ch_nr > 4 ? 4 : left_ch_nr;
+        left_ch_nr = max_ch_nr_x - cursor_x - 1;
+        space_nr = left_ch_nr > 4 ? 4 : left_ch_nr;
         for (int i = 0; i < space_nr; i++) {
             boot_putchar(' ');
         }
