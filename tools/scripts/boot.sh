@@ -55,7 +55,7 @@ EOF
 function parse_cmd() {
 
 	while [[ $# -gt 0 ]]; do
-        option="$1"
+		option="$1"
 		case "$1" in
 			-h|--help)
 				show_help
@@ -63,82 +63,82 @@ function parse_cmd() {
 				;;
 			-c|--cpu)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				CPU_PARAM="$1"
 				shift
 				;;
 			-s|--smp)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				SMP_PARAM="$1"
 				shift
 				;;
 			-m|--mem)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				MEM_PARAM="$1"
 				shift
 				;;
-            -g|--gdb)
+			-g|--gdb)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				GDB_PARAM="$1"
 				shift
 				;;
 			-e|--machine)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				MACHINE_PARAM="$1"
 				shift
 				;;
 			-d|--disk)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				DISK_PATH="$1"
 				shift
 				;;
 			-b|--bios)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				BIOS_EFI_PATH="$1"
 				shift
 				;;
 			-q|--qemu)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				QEMU_PATH="$1"
 				shift
 				;;
 			-o|--other)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				OTHER_PARAMS="$1"
 				shift
 				;;
@@ -187,12 +187,10 @@ function bios_check() {
 
 	for path in "${bios_efi_dirs[@]}"
 	do
-		if [ -x "$path" ] ; then
-            BIOS_EFI_PATH=$path
-            break
-        elif [ -d "$path" ] ; then 
-            echo "[!] Warn: QEMU BIOS/EFI directory \"$path\" found but could not be accessed"
-        fi
+		if [ -e "$path" ] ; then
+			BIOS_EFI_PATH=$path
+			break
+		fi
 	done
 
 	if [ -z "$BIOS_EFI_PATH" ] ; then
@@ -225,7 +223,7 @@ function gen_param() {
 
 	# bios
 	if [[ -n "$BIOS_EFI_PATH" ]]; then
-		QEMU_PARAM="${QEMU_PARAM} -L ${BIOS_EFI_PATH}"
+		QEMU_PARAM="${QEMU_PARAM} -bios ${BIOS_EFI_PATH}"
 	fi
 
 	# other

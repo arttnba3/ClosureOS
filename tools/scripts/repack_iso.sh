@@ -44,7 +44,7 @@ EOF
 function parse_cmd() {
 
 	while [[ $# -gt 0 ]]; do
-        option="$1"
+		option="$1"
 		case "$1" in
 			-h|--help)
 				show_help
@@ -52,37 +52,37 @@ function parse_cmd() {
 				;;
 			-r|--root)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				PROJECT_ROOT_DIR="$1"
 				shift
 				;;
 			-s|--source)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				SOURCE_CODE_DIR="$1"
 				shift
 				;;
 			-b|--build)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				BUILD_DIR="$1"
 				shift
 				;;
-            -i|--image_dir)
+			-i|--image_dir)
 				shift
-                if [[ -z "$1" ]]; then
-                    echo "[x] Error: Missing argument for $option"
-                    exit 1
-                fi
+				if [[ -z "$1" ]]; then
+					echo "[x] Error: Missing argument for $option"
+					exit 1
+				fi
 				IMAGE_OUTPUT_DIR="$1"
 				shift
 				;;
@@ -105,64 +105,64 @@ export DEFAULT_GRUB_DATA_DIR=""
 
 function env_check {
 
-    for program in "${needed_programs[@]}"
-    do
-        if ! which $program &>/dev/null ; then
-            echo "[x] program \"$program\" needed for building the project not found."
-            exit 1
-        fi
-    done
+	for program in "${needed_programs[@]}"
+	do
+		if ! which $program &>/dev/null ; then
+			echo "[x] program \"$program\" needed for building the project not found."
+			exit 1
+		fi
+	done
 
-    for program in "${grub_rescue_programs[@]}"
-    do
-        if which $program &>/dev/null ; then
-            DEFAULT_GRUB_RESCUE=$program
-            break
-        fi
-    done
+	for program in "${grub_rescue_programs[@]}"
+	do
+		if which $program &>/dev/null ; then
+			DEFAULT_GRUB_RESCUE=$program
+			break
+		fi
+	done
 
-    if [ -z "$DEFAULT_GRUB_RESCUE" ] ; then
-        echo "[x] No grub tools found on the computer!"
-        exit 1
-    fi
+	if [ -z "$DEFAULT_GRUB_RESCUE" ] ; then
+		echo "[x] No grub tools found on the computer!"
+		exit 1
+	fi
 
-    for dir in "${grub_efi_dirs[@]}"
-    do
-        if [ -x "$dir" ] ; then
-            DEFAULT_GRUB_DATA_DIR=$dir
-            break
-        elif [ -d "$dir" ] ; then 
-            echo "[!] Warn: Grub EFI directory \"$dir\" found but could not be accessed"
-        fi
-    done
+	for dir in "${grub_efi_dirs[@]}"
+	do
+		if [ -x "$dir" ] ; then
+			DEFAULT_GRUB_DATA_DIR=$dir
+			break
+		elif [ -d "$dir" ] ; then 
+			echo "[!] Warn: Grub EFI directory \"$dir\" found but could not be accessed"
+		fi
+	done
 
-    if [ -z "$DEFAULT_GRUB_DATA_DIR" ] ; then
-        echo "[!] No grub efi data available found.\nTry to use legacy bios..."
+	if [ -z "$DEFAULT_GRUB_DATA_DIR" ] ; then
+		echo "[!] No grub efi data available found.\nTry to use legacy bios..."
 
-        for dir in "${grub_bios_dirs[@]}"
-        do
-            if [ -x "$dir" ] ; then
-                DEFAULT_GRUB_DATA_DIR=$dir
-                break
-            elif [ -d "$dir" ] ; then 
-                echo "[!] Warn: Grub BIOS directory \"$dir\" found but could not be accessed"
-            fi
-        done
-    fi
+		for dir in "${grub_bios_dirs[@]}"
+		do
+			if [ -x "$dir" ] ; then
+				DEFAULT_GRUB_DATA_DIR=$dir
+				break
+			elif [ -d "$dir" ] ; then 
+				echo "[!] Warn: Grub BIOS directory \"$dir\" found but could not be accessed"
+			fi
+		done
+	fi
 
-    if [ -z "$DEFAULT_GRUB_DATA_DIR" ] ; then
-        echo "[x] No grub data available found!"
-        exit 1
-    fi
+	if [ -z "$DEFAULT_GRUB_DATA_DIR" ] ; then
+		echo "[x] No grub data available found!"
+		exit 1
+	fi
 }
 
 function build_project() {
 
 	rm -rf $BUILD_DIR
-    mkdir $BUILD_DIR
+	mkdir $BUILD_DIR
 	cd $BUILD_DIR
-    cmake $SOURCE_CODE_DIR
-    make
+	cmake $SOURCE_CODE_DIR
+	make
 
 }
 
