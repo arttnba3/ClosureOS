@@ -24,18 +24,18 @@ function show_help() {
 Usage: repack_iso.sh [options]
 
 Available options:
-	General:
-		-h|--help		show this message
-		-r|--root		root directory of the project
-						(default: "\$PWD")
-		-s|--source		source code of the project
-						(default: "\$PWD/src")
-		-b|--build		directory used for building
-						(default: "\$PWD/build")
-		-t|--target		directory for grub-rescue to pack
-						(default: "\$PWD/targets/x86_64/iso")
-		-i|--image_dir		directory for filesystem image output
-						(default: "\$PWD")
+
+	-h|--help		show this message
+	-r|--root		root directory of the project
+					(default: "\$PWD")
+	-s|--source		source code of the project
+					(default: "\$PWD/src")
+	-b|--build		directory used for building
+					(default: "\$PWD/build")
+	-t|--target		directory for grub-rescue to pack
+					(default: "\$PWD/targets/x86_64/iso")
+	-i|--image_dir		directory for filesystem image output
+					(default: "\$PWD")
 
 Please note that all redundant arguments will be ignored.
 EOF
@@ -154,6 +154,7 @@ function env_check {
 		echo "[x] No grub data available found!"
 		exit 1
 	fi
+
 }
 
 function build_project() {
@@ -173,7 +174,14 @@ function pack_iso() {
 
 }
 
-env_check
-parse_cmd "$@"
-build_project
-pack_iso
+function main() {
+	env_check
+
+	parse_cmd "$@"
+
+	build_project
+
+	pack_iso
+}
+
+main "$@"
