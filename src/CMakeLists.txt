@@ -20,12 +20,9 @@ else()
     message(FATAL_ERROR "Only support x86_64 now")
 endif()
 
-#set(LINK_SCRIPTS "src/linker.lds")
-
-
 # compile and link as bare bone project
-add_compile_options(-pipe -ffreestanding -nostdlib -fno-pie -fno-stack-protector -mcmodel=large)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -nostdlib -z max-page-size=0x1000")
+add_compile_options(-pipe -ffreestanding -nostdlib -fno-pie -fno-stack-protector -mcmodel=large -fno-asynchronous-unwind-tables)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib -z max-page-size=0x1000 -Wl,--build-id=none")
 
 # general include dirs
 include_directories(${PROJECT_SOURCE_DIR}/include)

@@ -95,7 +95,7 @@ function parse_cmd() {
 
 }
 
-declare -a needed_programs=("git" "cmake" "make" "cc" "c++" "ld" "ar" "ranlib")
+declare -a needed_programs=("git" "cmake" "make" "cc" "c++" "ld" "ar" "ranlib" "xorriso" "mformat")
 declare -a grub_rescue_programs=("grub-mkrescue" "grub2-mkrescue")
 declare -a grub_efi_dirs=("/usr/share/grub2/x86_64-efi" "/usr/lib/grub/x86_64-efi")
 declare -a grub_bios_dirs=("/usr/share/grub2/i386-pc" "/usr/lib/grub/i386-pc")
@@ -137,7 +137,7 @@ function env_check {
 	done
 
 	if [ -z "$DEFAULT_GRUB_DATA_DIR" ] ; then
-		echo "[!] No grub efi data available found.\nTry to use legacy bios..."
+		echo "[!] No grub efi data available found. Try to use legacy bios..."
 
 		for dir in "${grub_bios_dirs[@]}"
 		do
