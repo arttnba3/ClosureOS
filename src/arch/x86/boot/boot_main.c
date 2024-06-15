@@ -1,8 +1,8 @@
 #include <boot/multiboot2.h>
 #include <asm/page_types.h>
 #include <closureos/types.h>
+#include <boot/tty.h>
 
-extern int boot_tty_init(multiboot_uint8_t *mbi);
 extern uint64_t boot_pud[512];
 
 /**
