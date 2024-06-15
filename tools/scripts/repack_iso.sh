@@ -20,6 +20,7 @@ export IMAGE_OUTPUT_DIR="$PROJECT_ROOT_DIR"
 trap 'echo "[x] Failed to build the project, failed at command \"${BASH_COMMAND}\""; exit 1' ERR
 
 function show_help() {
+
 	cat << EOF
 Usage: repack_iso.sh [options]
 
@@ -39,6 +40,7 @@ Available options:
 
 Please note that all redundant arguments will be ignored.
 EOF
+
 }
 
 function parse_cmd() {
@@ -175,6 +177,7 @@ function pack_iso() {
 }
 
 function main() {
+
 	env_check
 
 	parse_cmd "$@"
@@ -182,6 +185,7 @@ function main() {
 	build_project
 
 	pack_iso
+
 }
 
 main "$@"

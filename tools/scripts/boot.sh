@@ -23,6 +23,7 @@ export BIOS_EFI_PATH=""
 export QEMU_PATH="qemu-system-x86_64"
 
 function show_help() {
+
 	cat << EOF
 Usage: run.sh [options]
 
@@ -50,6 +51,7 @@ Available options:
 
 Please note that all redundant arguments will be ignored.
 EOF
+
 }
 
 function parse_cmd() {
@@ -176,6 +178,7 @@ function env_check() {
 declare -a bios_efi_dirs=("/usr/share/ovmf/OVMF.fd")
 
 function bios_check() {
+
 	if [[ "$BIOS_EFI_PATH" == "default" ]] ; then
 		echo "[*] Using default SEABIOS."
 		BIOS_EFI_PATH=""
@@ -198,9 +201,11 @@ function bios_check() {
 	else
 		echo "[*] Using BIOS/EFI: \"$BIOS_EFI_PATH\""
 	fi
+
 }
 
 function gen_param() {
+
 	# cpu
 	QEMU_PARAM="${QEMU_PARAM} -cpu ${CPU_PARAM}"
 
@@ -231,14 +236,27 @@ function gen_param() {
 		echo "[*] Using extra params: \"$OTHER_PARAMS\""
 		QEMU_PARAM="${QEMU_PARAM} ${OTHER_PARAMS}"
 	fi
+
 }
 
 function run_qemu() {
+
 	$QEMU_PATH $QEMU_PARAM
+
 }
 
-parse_cmd "$@"
-env_check
-bios_check
-gen_param
-run_qemu
+function main() {
+
+	parse_cmd "$@"
+
+	env_check
+
+	bios_check
+
+	gen_param
+
+	run_qemu
+
+}
+
+main "$@"

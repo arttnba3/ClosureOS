@@ -203,8 +203,7 @@ static void boot_putchar_com(uint16_t ch)
     /* wait for the port to be ready */
     do {
         res = inb(com_base + COM_REG_LSR);
-        res &= 0x20;
-    } while (res == 0);
+    } while ((res & 0x20) == 0);
 
     outb(com_base, ch);
 }
@@ -250,23 +249,27 @@ int boot_init_com_internal(size_t base_port)
     outb(base_port + COM_REG_IER, 0x00);
 
     /* enable DLAB to set bound rate divisor */
-    outb(base_port + COM_REG_LCR, 0x80);
+    outb(base_port + COM_REG_LCR, COM_LCR_DLAB_ON);
 
     /* set divisor to 38400 baud */
     outb(base_port + COM_REG_DLL, 0x03);
     outb(base_port + COM_REG_DLM, 0x00);
 
     /* 8 data bits, parity off, 1 stop bit, DLAB latch off */
-    outb(base_port + COM_REG_LCR, 0x03);
+    outb(base_port + COM_REG_LCR,
+         COM_LCR_DB_WLEN_8 | COM_LCR_SB_ONE | COM_LCR_DLAB_OFF);
 
     /* enable FIFO */
-    outb(base_port + COM_REG_FCR, 0xC7);
+    outb(base_port + COM_REG_FCR,
+       COM_FCR_ITLB_TL_14 | COM_FCR_CTFB_ON | COM_FCR_CRFB_ON | COM_FCR_EFB_ON);
     
     /* enable IRQs, set RTS/DSR */
-    outb(base_port + COM_REG_MCR, 0x0B);
+    outb(base_port + COM_REG_MCR,
+         COM_MCR_OUT2_ON | COM_MCR_RTSB_ON | COM_MCR_DTRB_ON);
 
     /* set in loopback mode and test serial chip */
-    outb(base_port + COM_REG_MCR, 0x1E);
+    outb(base_port + COM_REG_MCR,
+         COM_MCR_LB_ON | COM_MCR_OUT2_ON | COM_MCR_OUT1_ON | COM_MCR_RTSB_ON);
 
     /* write a byte to test serial chip */
     outb(base_port + COM_REG_TX, "arttnba3"[0]);
@@ -277,7 +280,8 @@ int boot_init_com_internal(size_t base_port)
     }
 
     /* set in normal mode */
-    outb(base_port + COM_REG_MCR, 0x0F);
+    outb(base_port + COM_REG_MCR,
+         COM_MCR_OUT2_ON | COM_MCR_OUT1_ON | COM_MCR_RTSB_ON | COM_MCR_DTRB_ON);
 
     return 0;
 }
