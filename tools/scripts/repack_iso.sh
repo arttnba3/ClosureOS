@@ -17,8 +17,6 @@ export BUILD_DIR="$PROJECT_ROOT_DIR/build"
 export TARGET_DIR="$PROJECT_ROOT_DIR/targets/x86_64/iso"
 export IMAGE_OUTPUT_DIR="$PROJECT_ROOT_DIR"
 
-trap 'echo "[x] Failed to build the project, failed at command \"${BASH_COMMAND}\""; exit 1' ERR
-
 function show_help() {
 
 	cat << EOF
@@ -177,6 +175,7 @@ function pack_iso() {
 }
 
 function main() {
+	trap 'echo "[x] Failed to build the project, failed at command \"${BASH_COMMAND}\""; exit 1' ERR
 
 	env_check
 
