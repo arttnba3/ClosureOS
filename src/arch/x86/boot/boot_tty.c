@@ -536,7 +536,7 @@ int boot_tty_init(multiboot_uint8_t *mbi)
     boot_puts("Welcome to ClosureOS!");
     boot_puts("");
     boot_puts("Version 0.0.1");
-    boot_puts("Copyright(c) 2024 arttnba3");
+    boot_puts("Copyright(c) 2024 arttnba3 <arttnba@gmail.com>\n");
 
     return 0;
 }

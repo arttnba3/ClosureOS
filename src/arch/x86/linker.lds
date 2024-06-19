@@ -49,6 +49,7 @@ SECTIONS
 
 	KERM_VADDR = 0xffffffff81000000;
 	. = KERM_VADDR;
+	__kernel_start = .;
 
 	/* we use AT() there to make it loaded on phys correctly */
 	.text ALIGN(4096) : AT (ADDR (.text) - KERM_VADDR + __boot_end)

@@ -3,6 +3,7 @@
 #include <closureos/types.h>
 #include <boot/tty.h>
 
+extern int boot_mm_init(multiboot_uint8_t *mbi);
 extern uint64_t boot_pud[512];
 
 /**
@@ -20,8 +21,14 @@ void boot_pgtable_init(void)
 void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
 {
     boot_pgtable_init();
-    
+
     if (boot_tty_init(mbi) < 0) {
+        asm volatile ("hlt");
+    }
+
+    if (boot_mm_init(mbi) < 0) {
+        boot_puts("[x] FAILED to initialize memory management!");
+        boot_puts("[!] Abort booting.");
         asm volatile ("hlt");
     }
 

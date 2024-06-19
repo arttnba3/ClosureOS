@@ -5,6 +5,7 @@
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1UL << PAGE_SHIFT)
 #define PAGE_MASK (~(PAGE_SIZE - 1))
+#define PAGE_ALIGN(addr)    (((addr) + (PAGE_SIZE - 1)) & PAGE_MASK)
 
 /* page attributes */
 #define PAGE_ATTR_P     (1 << 0)
