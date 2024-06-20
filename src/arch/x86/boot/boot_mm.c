@@ -78,6 +78,30 @@ struct multiboot_tag_elf_sections *elf_info_tag = NULL;
 
 static bool addr_is_in_elf_range(phys_addr_t addr)
 {
+    struct elf64_shdr *shdr;
+    void *shdr_end;
+    phys_addr_t seg_start, seg_end;
+
+    shdr_end = (void*) ((phys_addr_t) &elf_info_tag->sections
+               + elf_info_tag->num * sizeof(*shdr));
+
+    for (shdr = (void*) &elf_info_tag->sections;
+         (void*) shdr < shdr_end;
+         shdr = (void*) ((phys_addr_t) shdr + sizeof(*shdr))) {
+
+        if ((shdr->sh_type != SHT_PROGBITS)
+            || !(shdr->sh_flags & SHF_ALLOC)) {
+            continue;
+        }
+
+        seg_start = 0x100000 + shdr->sh_offset;
+        seg_end = PAGE_ALIGN(seg_start + shdr->sh_size);
+
+        if (addr >= seg_start && addr < seg_end) {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -87,9 +111,6 @@ static void* boot_mm_page_alloc(void)
 
     while ((res = boot_mm_page_alloc_internal())) {
         if (addr_is_in_elf_range((phys_addr_t) res)) {
-            boot_printstr("\nWarning: allocated chunk: 0x");
-            boot_printhex((size_t) res);
-            boot_puts(" is located in kernel ELF");
             continue;
         } else {
             break;
@@ -124,19 +145,6 @@ int boot_mm_init(multiboot_uint8_t *mbi)
     }
 
     mmap_entry_nr = (mmap_tag->size - sizeof(*mmap_tag)) / sizeof(*mmap_entry);
-
-    for (uint32_t i = 0; i < mmap_entry_nr; i++) {
-        mmap_entry = &mmap_tag->entries[i];
-        if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            boot_printstr("[*] Memory region ");
-            boot_printnum(i);
-            boot_printstr(", addr: 0x");
-            boot_printhex(mmap_entry->addr);
-            boot_printstr(", len: 0x");
-            boot_printhex(mmap_entry->len);
-            boot_puts("");
-        }
-    }
 
     boot_putchar('\n');
 

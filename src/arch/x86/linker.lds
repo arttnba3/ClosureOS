@@ -47,41 +47,67 @@ SECTIONS
 
 	/* now we come to the REAL kernel */
 
-	KERM_VADDR = 0xffffffff81000000;
-	. = KERM_VADDR;
+	KERN_ELF_BASE = 0xFFFFFF8000000000;
+	. = KERN_ELF_BASE;
 	__kernel_start = .;
 
 	/* we use AT() there to make it loaded on phys correctly */
-	.text ALIGN(4096) : AT (ADDR (.text) - KERM_VADDR + __boot_end)
+
+	KERN_TEXT_BASE = KERN_ELF_BASE;
+	. = KERN_TEXT_BASE;
+	__kernel_text_base = .;
+
+	.text ALIGN(4096) : AT (__kernel_text_base - __kernel_start + __boot_end)
 	{
 		*(.text)
 	}
 
 	. = ALIGN(4096);
 
-	.rodata ALIGN(4096) : AT (ADDR (.rodata) - KERM_VADDR + __boot_end)
-	{
-		*(.rodata)
-	}
+	__kernel_text_end = .;
+	__kernel_text_sz = __kernel_text_end - __kernel_text_base;
 
-	. = ALIGN(4096);
+	KERN_DATA_BASE = 0xFFFFFF8008000000;
+	. = KERN_DATA_BASE;
+	__kernel_data_base = .;
 
-	__roseg_end = .;
-
-	.data ALIGN(4096) : AT (ADDR (.data) - KERM_VADDR + __boot_end)
+	.data ALIGN(4096) : AT (__kernel_text_sz + __boot_end)
 	{
 		*(.data)
 	}
 
 	. = ALIGN(4096);
 
-	.bss ALIGN(4096) : AT (ADDR (.bss) - KERM_VADDR + __boot_end)
+	__kernel_data_end = .;
+	__kernel_data_sz = __kernel_data_end - __kernel_data_base;
+
+	KERN_RODATA_BASE = 0xFFFFFF8010000000;
+	. = KERN_RODATA_BASE;
+	__kernel_rodata_base = .;
+
+	.rodata ALIGN(4096) : AT (__kernel_data_sz + __kernel_text_sz + __boot_end)
+	{
+		*(.rodata)
+	}
+
+	. = ALIGN(4096);
+
+	__kernel_rodata_end = .;
+	__kernel_rodata_sz = __kernel_rodata_end - __kernel_rodata_base;
+
+	KERN_BSS_BASE = 0xFFFFFF8018000000;
+	. = KERN_BSS_BASE;
+	__kernel_bss_base = .;
+
+	.bss ALIGN(4096) : AT (__kernel_rodata_sz + __kernel_data_sz + __kernel_text_sz + __boot_end)
 	{
 		*(COMMON)
 		*(.bss)
 	}
 
 	. = ALIGN(4096);
+
+	__kernel_bss_base = .;
 
 	__kernel_end = .;
 }

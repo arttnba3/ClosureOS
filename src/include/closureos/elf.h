@@ -103,4 +103,11 @@ struct elf64_shdr {
 #define SHT_LOUSER      0x80000000
 #define SHT_HIUSER      0xffffffff
 
+/* sh_flag for section header */
+
+#define SHF_WRITE       0x1
+#define SHF_ALLOC       0x2
+#define SHF_EXECIINSTR  0x4
+#define SHF_MASKPROC    0xf0000000
+
 #endif // CLOSUREOS_ELF_H
