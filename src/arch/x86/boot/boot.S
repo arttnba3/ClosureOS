@@ -79,11 +79,11 @@
         # set up page table for booting stage
         # it's okay to write only 32bit here :)
         mov     $boot_pud, %eax
-        or      $(PAGE_ATTR_P | PAGE_ATTR_RW), %eax
+        or      $(PDE_ATTR_P | PDE_ATTR_RW), %eax
         mov     %eax, boot_pgd
 
         xor     %eax, %eax
-        or      $(PAGE_ATTR_P | PAGE_ATTR_RW | PAGE_ATTR_PS), %eax
+        or      $(PDE_ATTR_P | PDE_ATTR_RW | PDE_ATTR_PS), %eax
         movl    %eax, boot_pud
 
         xor     %eax, %eax

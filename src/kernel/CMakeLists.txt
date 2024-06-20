@@ -10,3 +10,9 @@ if(SOURCE_FILE)
 else()
     add_library(${TARGET_NAME} INTERFACE)
 endif()
+
+add_subdirectory(mm)
+
+target_link_libraries(${TARGET_NAME}
+    INTERFACE
+        MM)

@@ -22,9 +22,9 @@ extern char _binary_font_psf_end[];
 
 /* frame buffer info */
 
-static uint32_t *framebuffer_base; /* 32 bit color */
-static uint32_t framebuffer_width;
-static uint32_t framebuffer_height;
+uint32_t *boot_fb_base, *boot_fb_end; /* 32 bit color */
+uint32_t boot_fb_width, boot_fb_height;
+size_t boot_fb_sz;
 
 /* char output info */
 
@@ -47,17 +47,17 @@ static void boot_putchar_fb_new_line(uint32_t bg)
     /* we may need to scroll up */
     if (fb_cursor_y >= max_ch_nr_y) {
         for (uint32_t y = 0; y < ((max_ch_nr_y - 1) * font_height); y++) {
-            for (uint32_t x = 0; x < framebuffer_width; x++) {
-                framebuffer_base[x + y * framebuffer_width] = 
-                framebuffer_base[x + (y + font_height) * framebuffer_width];
+            for (uint32_t x = 0; x < boot_fb_width; x++) {
+                boot_fb_base[x + y * boot_fb_width] = 
+                boot_fb_base[x + (y + font_height) * boot_fb_width];
             }
         }
 
         for (uint32_t y = 0; y < font_height; y++) {
-            for (uint32_t x = 0; x < framebuffer_width; x++) {
+            for (uint32_t x = 0; x < boot_fb_width; x++) {
                 size_t lines = (y + (max_ch_nr_y - 1) * font_height);
-                size_t loc = lines * framebuffer_width + x;
-                framebuffer_base[loc] = bg;
+                size_t loc = lines * boot_fb_width + x;
+                boot_fb_base[loc] = bg;
             }
         }
 
@@ -75,7 +75,7 @@ static void boot_putchar_fb(uint16_t ch, uint32_t fg, uint32_t bg)
         glyph += ch * bytes_per_glyph;
     }
 
-    loc =  fb_cursor_y * font_height * framebuffer_width;
+    loc =  fb_cursor_y * font_height * boot_fb_width;
     loc += fb_cursor_x * font_width;
 
     /* output the font to frame buffer */
@@ -84,9 +84,9 @@ static void boot_putchar_fb(uint16_t ch, uint32_t fg, uint32_t bg)
 
         for (uint32_t ch_x = 0; ch_x < font_width; ch_x++) {
             if ((*(glyph + ch_x / 8) & mask) != 0) {
-                framebuffer_base[loc + ch_y * framebuffer_width + ch_x] = fg;
+                boot_fb_base[loc + ch_y * boot_fb_width + ch_x] = fg;
             } else {
-                framebuffer_base[loc + ch_y * framebuffer_width + ch_x] = bg;
+                boot_fb_base[loc + ch_y * boot_fb_width + ch_x] = bg;
             }
 
             mask >>= 1;
@@ -109,9 +109,9 @@ static void boot_putchar_fb(uint16_t ch, uint32_t fg, uint32_t bg)
 
 static void boot_clear_screen_internal_fb(void)
 {
-    for (uint32_t y = 0; y < framebuffer_height; y++) {
-        for (uint32_t x = 0; x < framebuffer_width; x++) {
-            framebuffer_base[y * framebuffer_width + x] = 0;
+    for (uint32_t y = 0; y < boot_fb_height; y++) {
+        for (uint32_t x = 0; x < boot_fb_width; x++) {
+            boot_fb_base[y * boot_fb_width + x] = 0;
         }
     }
 }
@@ -140,9 +140,11 @@ static int boot_get_frame_buffer(multiboot_uint8_t *mbi)
         return -1;
     }
 
-    framebuffer_base = (uint32_t*) fb_info->common.framebuffer_addr;
-    framebuffer_height = fb_info->common.framebuffer_height;
-    framebuffer_width = fb_info->common.framebuffer_width;
+    boot_fb_base = (uint32_t*) fb_info->common.framebuffer_addr;
+    boot_fb_height = fb_info->common.framebuffer_height;
+    boot_fb_width = fb_info->common.framebuffer_width;
+    boot_fb_sz = boot_fb_width * boot_fb_height * sizeof(uint32_t);
+    boot_fb_end = (uint32_t*) ((size_t) boot_fb_base + boot_fb_sz);
 
     return 0;
 }
@@ -186,8 +188,8 @@ static void boot_init_font(void)
     bytes_per_glyph = boot_font->bytes_per_glyph;
 
     fb_cursor_x = fb_cursor_y = 0;
-    max_ch_nr_x = framebuffer_width / font_width;
-    max_ch_nr_y = framebuffer_height / font_height;
+    max_ch_nr_x = boot_fb_width / font_width;
+    max_ch_nr_y = boot_fb_height / font_height;
 }
 
 /**
@@ -395,6 +397,21 @@ static void boot_putchar_default(uint16_t ch)
 
 static void (*internal_boot_putchar)(uint16_t ch) = boot_putchar_default;
 
+bool boot_tty_has_fb(void)
+{
+    return internal_boot_putchar != boot_putchar_no_fb;
+}
+
+bool boot_tty_has_com(void)
+{
+    return internal_boot_putchar != boot_putchar_no_com;
+}
+
+size_t boot_tty_fb_sz(void)
+{
+    return boot_fb_sz;
+}
+
 void boot_putchar(uint16_t ch)
 {
     switch (ch) {
@@ -527,9 +544,9 @@ int boot_tty_init(multiboot_uint8_t *mbi)
     /* clear the screen */
     boot_clear_screen();
 
-    if (internal_boot_putchar == boot_putchar_no_fb) {
+    if (!boot_tty_has_fb()) {
         boot_puts("Warning: running under no-graphic mode.\n");
-    } else if (internal_boot_putchar == boot_putchar_no_com) {
+    } else if (!boot_tty_has_com()) {
         boot_puts("Warning: No serial port for us to output.\n");
     }
 
