@@ -22,6 +22,7 @@
 #define PDE_ATTR_P     (1 << 0)
 #define PDE_ATTR_RW    (1 << 1)
 #define PDE_ATTR_PS    (1 << 7)
+#define PDE_DEFAULT     (PDE_ATTR_P | PDE_ATTR_RW)
 
 /* page table entry */
 

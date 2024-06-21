@@ -22,6 +22,8 @@ void boot_pgtable_init(void)
 
 void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
 {
+    int ret;
+
     boot_pgtable_init();
 
     if (boot_tty_init(mbi) < 0) {
@@ -30,9 +32,10 @@ void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
 
     boot_puts("[+] booting-stage tty initialization done.");
 
-    if (boot_mm_init(mbi) < 0) {
-        boot_puts("[x] FAILED to initialize memory management!");
-        boot_puts("[!] Abort booting.");
+    if ((ret = boot_mm_init(mbi)) < 0) {
+        boot_printstr("[x] FAILED to initialize memory management, errno: ");
+        boot_printnum(ret);
+        boot_puts("\n[!] Abort booting.");
         asm volatile ("hlt");
     }
 

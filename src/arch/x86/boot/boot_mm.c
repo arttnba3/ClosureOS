@@ -166,7 +166,7 @@ int boot_mm_pgtable_map(phys_addr_t pgtable,
         }
 
         boot_memset((void*) pgd[pgd_i], 0, PAGE_SIZE);
-        pgd[pgd_i] |= attr;
+        pgd[pgd_i] |= PDE_DEFAULT;
     }
 
     pud = (pud_t*) (pgd[pgd_i] & PAGE_MASK);
@@ -178,7 +178,7 @@ int boot_mm_pgtable_map(phys_addr_t pgtable,
         }
 
         boot_memset((void*) pud[pud_i], 0, PAGE_SIZE);
-        pud[pud_i] |= attr;
+        pud[pud_i] |= PDE_DEFAULT;
     }
 
     pmd = (pmd_t*) (pud[pud_i] & PAGE_MASK);
@@ -190,7 +190,7 @@ int boot_mm_pgtable_map(phys_addr_t pgtable,
         }
 
         boot_memset((void*) pmd[pmd_i], 0, PAGE_SIZE);
-        pmd[pmd_i]|= attr;
+        pmd[pmd_i] |= PDE_DEFAULT;
     }
 
     pte = (pte_t*) (pmd[pmd_i] & PAGE_MASK);
@@ -304,9 +304,9 @@ static int boot_mm_pgtable_init(void)
         seg_phys_end = PAGE_ALIGN(seg_phys_start + boot_tty_fb_sz());
         while (seg_phys_start < seg_phys_end) {
             ret = boot_mm_pgtable_map(boot_kern_pgtable,
-                                    seg_virt_start,
-                                    seg_phys_start,
-                                    PTE_ATTR_P | PTE_ATTR_RW);
+                                      seg_virt_start,
+                                      seg_phys_start,
+                                      PTE_ATTR_P | PTE_ATTR_RW);
             if (ret < 0) {  /* out of memory */
                 return ret;
             }
@@ -368,7 +368,7 @@ static int boot_mm_pgtable_init(void)
         boot_memset(new_page, 0, PAGE_SIZE);
         ret = boot_mm_pgtable_map(boot_kern_pgtable,
                                   (virt_addr_t) &pgdb_base[i],
-                                  physmem_start,
+                                  (phys_addr_t) new_page,
                                   PTE_ATTR_P | PTE_ATTR_RW);
         if (ret < 0) {
             return ret;
@@ -406,11 +406,13 @@ static int boot_mm_pgtable_init(void)
                 pgdb_base[pfn].type = PAGE_BADRAM;
                 break;
             default:
+                /*
                 boot_printstr("[!] Warning: unknown memory type [");
                 boot_printnum(mmap_tag->entries[i].type);
                 boot_printstr("] at addr: 0x");
                 boot_printhex(base);
                 boot_putchar('\n');
+                */
                 break;
             }
 

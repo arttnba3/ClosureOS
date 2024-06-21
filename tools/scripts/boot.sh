@@ -13,7 +13,7 @@
 
 export CPU_PARAM="kvm64,+smep,+smap"
 export SMP_PARAM="sockets=1,dies=1,cores=4,threads=2"
-export MEM_PARAM="256M"
+export MEM_PARAM="1G"
 export GDB_PARAM="tcp:localhost:1234"
 export MACHINE_PARAM="q35"
 export OTHER_PARAMS=""
