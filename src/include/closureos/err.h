@@ -3,18 +3,19 @@
 
 #include <closureos/types.h>
 #include <closureos/errno.h>
+#include <closureos/compiler.h>
 
-static inline __attribute__((always_inline)) bool IS_ERR_PTR(const void *ptr)
+static __always_inline bool IS_ERR_PTR(const void *ptr)
 {
     return (size_t) ptr > (size_t) -MAX_ERRNO;
 }
 
-static inline __attribute__((always_inline)) void* ERR_PTR(ssize_t errno)
+static __always_inline void* ERR_PTR(ssize_t errno)
 {
     return (void*) errno;
 }
 
-static inline __attribute__((always_inline)) ssize_t PTR_ERR(void *ptr)
+static __always_inline ssize_t PTR_ERR(void *ptr)
 {
     return (ssize_t) ptr;
 }

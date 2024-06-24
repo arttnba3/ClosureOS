@@ -5,3 +5,5 @@
 struct page *pgdb_base;
 size_t pgdb_page_nr;
 spinlock_t pgdb_lock;
+
+virt_addr_t physmem_base, vmremap_base, kernel_base;

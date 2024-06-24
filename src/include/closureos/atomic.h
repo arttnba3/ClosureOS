@@ -6,7 +6,7 @@
 typedef uint32_t atomic_t;
 
 /**
- * if the *ptr == oldval, it'll be set to newval, the return val will be true,
+ * if *ptr == oldval, it'll be set to newval, and the return val will be true,
  * otherwise it'll return false and nothing got changed
  */
 #define atomic_compare_and_swap(ptr, oldval, newval) \

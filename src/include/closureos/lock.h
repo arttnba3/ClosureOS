@@ -3,29 +3,34 @@
 
 #include <closureos/types.h>
 #include <closureos/atomic.h>
+#include <closureos/compiler.h>
 
-#define LOCK_USED 1
-#define LOCK_FREE 0
+#define SPINLOCK_LOCKED 1
+#define SPINLOCK_FREE 0
 
 typedef struct {
     atomic_t counter;
 } spinlock_t;
 
-static inline void spin_lock_init(spinlock_t *lock)
+static __always_inline void spin_lock_init(spinlock_t *lock)
 {
-    atomic_set(&lock->counter, LOCK_FREE);
+    atomic_set(&lock->counter, SPINLOCK_FREE);
 }
 
-static inline void spin_lock(spinlock_t *lock)
+static __always_inline void spin_lock(spinlock_t *lock)
 {
-    while (!atomic_compare_and_swap(&lock->counter, LOCK_FREE, LOCK_USED)) {
+    while (!atomic_compare_and_swap(
+        &lock->counter, SPINLOCK_FREE, SPINLOCK_LOCKED
+    )) {
         continue;
     }
 }
 
-static inline void spin_unlock(spinlock_t *lock)
+static __always_inline void spin_unlock(spinlock_t *lock)
 {
-    while (!atomic_compare_and_swap(&lock->counter, LOCK_USED, LOCK_FREE)) {
+    while (!atomic_compare_and_swap(
+        &lock->counter, SPINLOCK_LOCKED, SPINLOCK_FREE
+    )) {
         continue;
     }
 }

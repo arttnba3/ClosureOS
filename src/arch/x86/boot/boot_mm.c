@@ -353,6 +353,14 @@ static int boot_mm_pgtable_init(void)
     /* load the new page table now! */
     boot_mm_load_pgtable(boot_kern_pgtable);
 
+    return 0;
+}
+
+int boot_mm_page_database_init(void)
+{
+    phys_addr_t physmem_start, physmem_end;
+    int ret;
+
     /* map for `struct page` array */
     physmem_end = PAGE_ALIGN(physmem_end);
     pgdb_base = (void*) KERN_PAGE_DATABASE_REGION_BASE;
@@ -392,6 +400,11 @@ static int boot_mm_pgtable_init(void)
             switch (mmap_tag->entries[i].type) {
             case MULTIBOOT_MEMORY_AVAILABLE:
                 pgdb_base[pfn].type = PAGE_NORMAL_MEM;
+                if (base < curr_avail) {    /* used page */
+                    atomic_set(&pgdb_base[pfn].ref_count, 0);
+                } else {    /* free page */
+                    atomic_set(&pgdb_base[pfn].ref_count, -1);
+                }
                 break;
             case MULTIBOOT_MEMORY_RESERVED:
                 pgdb_base[pfn].type = PAGE_RESERVED;
@@ -406,6 +419,7 @@ static int boot_mm_pgtable_init(void)
                 pgdb_base[pfn].type = PAGE_BADRAM;
                 break;
             default:
+                pgdb_base[pfn].type = PAGE_UNKNOWN;
                 /*
                 boot_printstr("[!] Warning: unknown memory type [");
                 boot_printnum(mmap_tag->entries[i].type);
@@ -466,6 +480,12 @@ int boot_mm_init(multiboot_uint8_t *mbi)
 
     if ((ret = boot_mm_pgtable_init()) < 0) {
         boot_printstr("[x] FAILED to initialize page table, errno: ");
+        boot_printnum(ret);
+        boot_putchar('\n');
+    }
+
+    if ((ret = boot_mm_page_database_init()) < 0) {
+        boot_printstr("[x] FAILED to initialize page database, errno: ");
         boot_printnum(ret);
         boot_putchar('\n');
     }
