@@ -353,20 +353,24 @@ static int boot_mm_pgtable_init(void)
     /* load the new page table now! */
     boot_mm_load_pgtable(boot_kern_pgtable);
 
+    /* init for some vals */
+    physmem_base = KERN_DIRECT_MAP_REGION_BASE;
+    kernel_base = KERN_SEG_TEXT_REGION_START;
+    vmremap_base = KERN_DYNAMIC_MAP_REGION_BASE;
+
+    /* pre-init page database */
+    pgdb_base = (void*) KERN_PAGE_DATABASE_REGION_BASE;
+    pgdb_page_nr = (physmem_end - physmem_start) / PAGE_SIZE;
+
     return 0;
 }
 
 int boot_mm_page_database_init(void)
 {
-    phys_addr_t physmem_start, physmem_end;
     int ret;
 
     /* map for `struct page` array */
-    physmem_end = PAGE_ALIGN(physmem_end);
-    pgdb_base = (void*) KERN_PAGE_DATABASE_REGION_BASE;
-    pgdb_page_nr = (physmem_end - physmem_start) / PAGE_SIZE;
-
-    for (size_t i = 0; physmem_start < physmem_end; i += PGDB_PG_PAGE_NR) {
+    for (size_t i = 0; i < pgdb_page_nr; i += PGDB_PG_PAGE_NR) {
         void *new_page = boot_mm_page_alloc();
 
         if(IS_ERR_PTR(new_page)) {
@@ -381,8 +385,6 @@ int boot_mm_page_database_init(void)
         if (ret < 0) {
             return ret;
         }
-
-        physmem_start += PGDB_PG_PAGE_NR * PAGE_SIZE;
     }
 
     /**

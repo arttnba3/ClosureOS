@@ -33,18 +33,13 @@ void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
     boot_puts("[+] booting-stage tty initialization done.");
 
     if ((ret = boot_mm_init(mbi)) < 0) {
-        boot_printstr("[x] FAILED to initialize memory management, errno: ");
+        boot_printstr("[x] FAILED to initialize memory unit, errno: ");
         boot_printnum(ret);
         boot_puts("\n[!] Abort booting.");
         asm volatile ("hlt");
     }
 
-    boot_puts("[+] Memory management initialization done.");
-
-    while (1) {
-        boot_puts("[x] No work todo, hlting...");
-        asm volatile ("hlt");
-    }
+    boot_puts("[+] booting-state memory initialization done.");
 
     main(mbi);
 }

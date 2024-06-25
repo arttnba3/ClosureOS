@@ -2,6 +2,7 @@
 #define CLOSUREOS_LIST_H
 
 #include <closureos/container.h>
+#include <closureos/compiler.h>
 
 struct list_head {
     struct list_head *prev, *next;
@@ -20,17 +21,48 @@ struct list_head {
             .prev = &name,                  \
         }
 
-#define list_add(node, prev, next)  \
-        {                           \
-            node->prev = prev;      \
-            prev->next = node;      \
-            node->next = next;      \
-            next->prev = node;      \
+#define list_head_init(head)            \
+        do {                            \
+            (head)->prev = head;        \
+            (head)->next = head;        \
+        } while(0)
+
+#define list_add(node, prev, next)      \
+        {                               \
+            (node)->prev = prev;        \
+            prev->next = (node);        \
+            (node)->next = next;        \
+            next->prev = (node);        \
         }
 
-#define list_add_tail(node, head)   list_add(node, head, head->next)
+/* add a new node to the list as entry->prev */
+static __always_inline void list_add_prev(struct list_head *entry, 
+                                          struct list_head *prev)
+{
+    entry->prev->next = prev;
+    prev->prev = entry->prev;
+    prev->next = entry;
+    entry->prev = prev;
+}
 
-#define list_add_prev(node, head)   list_add(node, head->prev, head)
+/* add a new node to the list as entry->next */
+static __always_inline void list_add_next(struct list_head *entry, 
+                                          struct list_head *next)
+{
+    entry->next->prev = next;
+    next->prev = entry;
+    next->next = entry->next;
+    entry->next = next;
+}
+
+#define list_del(node)                                  \
+        do {                                            \
+            (node)->prev->next = (node)->next;          \
+            (node)->next->prev = (node)->prev;          \
+        } while (0)
+
+#define list_empty(entry)       \
+        (((entry)->next == entry) && ((entry)->prev == entry))
 
 #define list_entry(ptr, type, member)       \
         container_of(ptr, type, member)
@@ -54,5 +86,6 @@ struct list_head {
         for (pos = list_head_first_entry(head, typeof(*pos), member);   \
             list_entry_is_head(pos, head, member);                      \
             pos = list_next_entry(pos, member))
+
 
 #endif // CLOSUREOS_LIST_H

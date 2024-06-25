@@ -4,6 +4,7 @@
 #include <closureos/types.h>
 #include <closureos/list.h>
 #include <closureos/lock.h>
+#include <closureos/mm/mm_types.h>
 #include <asm/page_types.h>
 
 enum page_type {
@@ -51,6 +52,17 @@ struct page {
 /* pages array representing all pages */
 extern struct page *pgdb_base;
 extern size_t pgdb_page_nr;
+extern spinlock_t pgdb_lock;
+
+#define MAX_PAGE_ORDER 11
+extern struct list_head freelist[MAX_PAGE_ORDER];
+
+static __always_inline struct page *get_head_page(struct page *p)
+{
+    return p->is_head 
+          ? p 
+          : (struct page*)((virt_addr_t) p & ~((sizeof(*p)*(1 << p->order))-1));
+}
 
 /* number of `struct page` in a page frame */
 #define PGDB_PG_PAGE_NR (PAGE_SIZE / sizeof(struct page))
@@ -71,5 +83,8 @@ static __always_inline struct page* phys_to_page(phys_addr_t addr)
 {
     return &pgdb_base[(addr & PAGE_MASK) / PAGE_SIZE];
 }
+
+extern struct page *alloc_pages(int order);
+extern void free_pages(struct page *p, int order);
 
 #endif 

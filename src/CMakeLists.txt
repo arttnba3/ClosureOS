@@ -16,6 +16,7 @@ endif()
 # global link script
 if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T ${CMAKE_SOURCE_DIR}/arch/x86/linker.lds")
+    include_directories("arch/x86/include")
 else()
     message(FATAL_ERROR "Only support x86_64 now")
 endif()
