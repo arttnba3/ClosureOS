@@ -388,7 +388,7 @@ int boot_mm_page_database_init(void)
     }
 
     /**
-     * as we set all page to 0 at the begining, we don't need to care about hole
+     * as we set all page to 0 at the beginning,we don't need to care about hole
      * because the type for memory hole is 0 in our design
     */
     for (int i = 0; i < mmap_entry_nr; i++) {
@@ -398,13 +398,17 @@ int boot_mm_page_database_init(void)
 
         while (base < end) {
             pfn = base / PAGE_SIZE;
+            pgdb_base[pfn].migrate_type = MIGRATE_UNMOVABLE;
+            spin_lock_init((&pgdb_base[pfn].lock));
 
             switch (mmap_tag->entries[i].type) {
             case MULTIBOOT_MEMORY_AVAILABLE:
                 pgdb_base[pfn].type = PAGE_NORMAL_MEM;
-                if (base < curr_avail) {    /* used page */
+                if (base < curr_avail || addr_is_in_used_range(base)) {
+                    /* used page */
                     atomic_set(&pgdb_base[pfn].ref_count, 0);
-                } else {    /* free page */
+                } else {
+                    /* free page */
                     atomic_set(&pgdb_base[pfn].ref_count, -1);
                 }
                 break;
@@ -436,14 +440,12 @@ int boot_mm_page_database_init(void)
         }
     }
 
-    /* TODO: calculate ref-count for used pages now */
-
     return 0;
 }
 
 int boot_mm_init(multiboot_uint8_t *mbi)
 {
-    struct multiboot_tag *tag = (struct multiboot_tag *) (mbi + 8);
+    struct multiboot_tag *tag;
     static struct multiboot_mmap_entry *mmap_entry;
     int ret;
 

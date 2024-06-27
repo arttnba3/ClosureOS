@@ -20,19 +20,20 @@ static __always_inline void spin_lock_init(spinlock_t *lock)
 static __always_inline void spin_lock(spinlock_t *lock)
 {
     while (!atomic_compare_and_swap(
-        &lock->counter, SPINLOCK_FREE, SPINLOCK_LOCKED
-    )) {
-        continue;
-    }
+            &lock->counter, SPINLOCK_FREE, SPINLOCK_LOCKED
+    )) { }
+}
+
+static __always_inline bool spin_try_lock(spinlock_t *lock)
+{
+    return atomic_compare_and_swap(
+            &lock->counter, SPINLOCK_FREE, SPINLOCK_LOCKED
+    );
 }
 
 static __always_inline void spin_unlock(spinlock_t *lock)
 {
-    while (!atomic_compare_and_swap(
-        &lock->counter, SPINLOCK_LOCKED, SPINLOCK_FREE
-    )) {
-        continue;
-    }
+    atomic_set(&lock->counter, SPINLOCK_FREE);
 }
 
 #endif // CLOSUREOS_LOCK_H

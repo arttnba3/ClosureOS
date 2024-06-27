@@ -76,6 +76,8 @@ static void __reclaim_memory(void)
 
 }
 
+#include <boot/tty.h>
+
 /* This is the `heart` of buddy system allocation */
 static struct page *__alloc_pages(int order)
 {
@@ -92,12 +94,12 @@ redo:
     /* try to alloc directly */
     p = __alloc_page_direct(order);
     if (p) {
-        p->ref_count++;
+        atomic_inc(&p->ref_count);
         p->is_head = true;
         p->order = order;
         p->is_free = false;
 
-        for (int i = 1; i < ((1 << order) - 1); i++) {
+        for (int i = 1; i < (1 << order); i++) {
             p[i].is_head = false;
             p[i].order = order;
         }

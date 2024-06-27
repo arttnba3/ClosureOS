@@ -87,4 +87,14 @@ static __always_inline struct page* phys_to_page(phys_addr_t addr)
 extern struct page *alloc_pages(int order);
 extern void free_pages(struct page *p, int order);
 
-#endif 
+static __always_inline void get_page(struct page *p)
+{
+
+}
+
+static __always_inline void put_page(struct page *p)
+{
+
+}
+
+#endif
