@@ -11,22 +11,15 @@ struct list_head freelist[MAX_PAGE_ORDER];
 
 virt_addr_t physmem_base, vmremap_base, kernel_base;
 
-struct page *next_page_by_order(struct page *p, int order)
+static __always_inline size_t buddy_page_pfn(pfn_t pfn, int order)
 {
-    if (order >= MAX_PAGE_ORDER) {
-        return NULL;
-    }
-
-    return p + (1 << order);
+    return pfn ^ (1 << order);
 }
 
-struct page *prev_page_by_order(struct page *p, int order)
+static __always_inline struct page* get_page_buddy(struct page *p, int order)
 {
-    if (order >= MAX_PAGE_ORDER) {
-        return NULL;
-    }
-
-    return p - (1 << order);
+    pfn_t pfn = page_to_pfn(p);
+    return pfn_to_page(buddy_page_pfn(pfn, order));
 }
 
 /**
@@ -61,7 +54,7 @@ static struct page *__alloc_page_direct(int order)
         allocated--;
         while (allocated >= order) {
             list_add_next(&freelist[allocated],
-                          &next_page_by_order(p, allocated)->list);
+                          &get_page_buddy(p, allocated)->list);
             allocated--;
         }
     }
@@ -94,15 +87,14 @@ redo:
     /* try to alloc directly */
     p = __alloc_page_direct(order);
     if (p) {
-        atomic_inc(&p->ref_count);
-        p->is_head = true;
-        p->order = order;
-        p->is_free = false;
-
-        for (int i = 1; i < (1 << order); i++) {
+        for (int i = 0; i < (1 << order); i++) {
             p[i].is_head = false;
             p[i].order = order;
+            p->is_free = false;
+            list_head_init(&p[i].list);
         }
+
+        p->is_head = true;
 
         goto out;
     }
@@ -144,23 +136,16 @@ static void __free_pages(struct page *p, int order)
 
     /* try to combine nearby pages */
     while (order < (MAX_PAGE_ORDER - 1)) {
-        struct page *next, *prev;
+        struct page *buddy;
 
-        next = next_page_by_order(p, order);
-        if (next->type == PAGE_NORMAL_MEM && next->is_free && next->is_head) {
-            list_del(&next->list);
-            next->is_head = false;
+        buddy = get_page_buddy(p, order);
+        if (buddy->type == PAGE_NORMAL_MEM && buddy->is_free && buddy->is_head){
+            list_del(&buddy->list);
+            if (buddy < p) {
+                p->is_head = false;
+                p = buddy;
+            }
             order++;
-            continue;
-        }
-
-        prev = prev_page_by_order(p, order);
-        if (prev->type == PAGE_NORMAL_MEM && prev->is_free && prev->is_head) {
-            list_del(&prev->list);
-            p->is_head = false;
-            p->is_free = true;
-            order++;
-            p = prev;
             continue;
         }
 
@@ -168,9 +153,15 @@ static void __free_pages(struct page *p, int order)
         break;
     }
 
+    for (int i = 0; i < (1 << order); i++) {
+        p[i].is_head = false;
+        p[i].is_free = true;
+        p[i].order = order;
+        p->ref_count = p->map_count = -1;
+    }
+    p->is_head = true;
+
     list_add_next(&(freelist[order]), &p->list);
-    p->ref_count = p->map_count = -1;
-    p->is_free = p->is_head = true;
 
     spin_unlock(&pgdb_lock);
 }

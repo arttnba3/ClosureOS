@@ -5,10 +5,11 @@ Memory layout of ClosureOS is defined as below:
 | Start address | End address | Size | Description |
 | :------------:|:-----------:|:----:|:-----------:|
 | 0x0000000000000000 | 0x00007FFFFFFFFFFF | 128TB | memory space for user-mode process, isolate for per one |
+| 0x0000800000000000 | 0xFFFF7FFFFFFFFFFF | 16776960 TB | unused hole |
 | | | | shared kernel-space virtual memory for all processes |
-| 0xFFFF000000000000 | 0xFFFF7FFFFFFFFFFF | 128TB | direct mapping of first 128TB physical memory (physmem_base) |
-| 0xFFFF800000000000 | 0xFFFFBFFFFFFFFFFF | 64TB | dynamic kernel memory mapping region (vmremap_base) |
-| 0xFFFFC00000000000 | 0xFFFFEFFFFFFFFFFF | 48TB | unused hole |
+| 0xFFFF800000000000 | 0xFFFFBFFFFFFFFFFF | 64TB | direct mapping of first 128TB physical memory (physmem_base) |
+| 0xFFFFC00000000000 | 0xFFFFCFFFFFFFFFFF | 16TB | dynamic kernel memory mapping region (vmremap_base) |
+| 0xFFFFD00000000000 | 0xFFFFEFFFFFFFFFFF | 32TB | unused hole |
 | 0xFFFFF00000000000 | 0xFFFFF7FFFFFFFFFF | 8TB | page database (pgdb_base) |
 | 0xFFFFF80000000000 | 0xFFFFF9FFFFFFFFFF | 2TB | unused hole |
 | 0xFFFFFA0000000000 | 0xFFFFFA0FFFFFFFFF | 64GB | kernel stack, isolate for each process |

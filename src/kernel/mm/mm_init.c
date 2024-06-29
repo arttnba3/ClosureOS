@@ -1,6 +1,7 @@
 #include <closureos/mm/pages.h>
 #include <closureos/list.h>
 #include <closureos/lock.h>
+#include <closureos/mm/slub.h>
 
 void freelist_init(void)
 {
@@ -26,4 +27,5 @@ void mm_core_init(void)
 {
     freelist_init();
     page_database_init();
+    kmem_cache_init();
 }

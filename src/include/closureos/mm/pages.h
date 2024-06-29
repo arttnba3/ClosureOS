@@ -69,6 +69,16 @@ static __always_inline struct page *get_head_page(struct page *p)
 
 extern virt_addr_t physmem_base, vmremap_base, kernel_base;
 
+static __always_inline pfn_t page_to_pfn(struct page *p)
+{
+    return p - pgdb_base;
+}
+
+static __always_inline struct page* pfn_to_page(pfn_t pfn)
+{
+    return &pgdb_base[pfn];
+}
+
 static __always_inline phys_addr_t page_to_phys(struct page *p)
 {
     return (p - pgdb_base) * PAGE_SIZE;
@@ -79,9 +89,24 @@ static __always_inline virt_addr_t page_to_virt(struct page *p)
     return physmem_base + page_to_phys(p);
 }
 
+static __always_inline phys_addr_t virt_to_phys(virt_addr_t addr)
+{
+    return addr - physmem_base;
+}
+
+static __always_inline virt_addr_t phys_to_virt(phys_addr_t addr)
+{
+    return addr + physmem_base;
+}
+
 static __always_inline struct page* phys_to_page(phys_addr_t addr)
 {
     return &pgdb_base[(addr & PAGE_MASK) / PAGE_SIZE];
+}
+
+static __always_inline struct page* virt_to_page(virt_addr_t addr)
+{
+    return phys_to_page(virt_to_phys(addr));
 }
 
 extern struct page *alloc_pages(int order);
@@ -89,12 +114,16 @@ extern void free_pages(struct page *p, int order);
 
 static __always_inline void get_page(struct page *p)
 {
-
+    atomic_inc(&get_head_page(p)->ref_count);
 }
 
 static __always_inline void put_page(struct page *p)
 {
+    p = get_head_page(p);
 
+    if (atomic_dec(&p->ref_count) < 0) {
+        free_pages(p, p->order);
+    }
 }
 
 #endif
