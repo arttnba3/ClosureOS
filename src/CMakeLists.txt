@@ -6,6 +6,7 @@ project(ClosureOS)
 
 # languages we will use
 enable_language(C)
+enable_language(CXX)
 enable_language(ASM)
 
 # check for current compiler environment, temporarily support linux only
@@ -22,7 +23,7 @@ else()
 endif()
 
 # compile and link as bare bone project
-add_compile_options(-pipe -ffreestanding -nostdlib -fno-pie -fno-stack-protector -mcmodel=large -fno-asynchronous-unwind-tables)
+add_compile_options(-pipe -ffreestanding -nostdlib -fno-pie -fno-stack-protector -mcmodel=large -fno-asynchronous-unwind-tables -fno-exceptions)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib -z max-page-size=0x1000 -Wl,--build-id=none -static")
 
 # general include dirs

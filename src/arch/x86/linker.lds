@@ -60,6 +60,7 @@ SECTIONS
 	.text ALIGN(4096) : AT (__kernel_text_base - __kernel_start + __boot_end)
 	{
 		*(.text)
+		*(.text.*)
 	}
 
 	. = ALIGN(4096);
@@ -67,13 +68,17 @@ SECTIONS
 	__kernel_text_end = .;
 	__kernel_text_sz = __kernel_text_end - __kernel_text_base;
 
-	KERN_DATA_BASE = 0xFFFFFF8008000000;
+	KERN_DATA_BASE = 0xFFFFFF8010000000;
 	. = KERN_DATA_BASE;
 	__kernel_data_base = .;
 
 	.data ALIGN(4096) : AT (__kernel_text_sz + __boot_end)
 	{
 		*(.data)
+		__init_array = .;
+		*(.init_array)
+		__fini_array = .;
+		*(.fini_array)
 	}
 
 	. = ALIGN(4096);
@@ -81,7 +86,7 @@ SECTIONS
 	__kernel_data_end = .;
 	__kernel_data_sz = __kernel_data_end - __kernel_data_base;
 
-	KERN_RODATA_BASE = 0xFFFFFF8010000000;
+	KERN_RODATA_BASE = 0xFFFFFF8020000000;
 	. = KERN_RODATA_BASE;
 	__kernel_rodata_base = .;
 
@@ -95,7 +100,7 @@ SECTIONS
 	__kernel_rodata_end = .;
 	__kernel_rodata_sz = __kernel_rodata_end - __kernel_rodata_base;
 
-	KERN_BSS_BASE = 0xFFFFFF8018000000;
+	KERN_BSS_BASE = 0xFFFFFF8030000000;
 	. = KERN_BSS_BASE;
 	__kernel_bss_base = .;
 
@@ -107,7 +112,10 @@ SECTIONS
 
 	. = ALIGN(4096);
 
-	__kernel_bss_base = .;
+	__kernel_bss_end = .;
+	__kernel_bss_sz = __kernel_bss_end - __kernel_bss_base;
+
+	. = ALIGN(4096);
 
 	__kernel_end = .;
 }

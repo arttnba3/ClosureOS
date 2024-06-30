@@ -14,8 +14,8 @@ Memory layout of ClosureOS is defined as below:
 | 0xFFFFF80000000000 | 0xFFFFF9FFFFFFFFFF | 2TB | unused hole |
 | 0xFFFFFA0000000000 | 0xFFFFFA0FFFFFFFFF | 64GB | kernel stack, isolate for each process |
 | 0xFFFFFA1000000000 | 0xFFFFFF7FFFFFFFFF | 5568GB | unused hole |
-| 0xFFFFFF8000000000 | 0xFFFFFF8007FFFFFF | 128MB | kernel .text segment |
-| 0xFFFFFF8008000000 | 0xFFFFFF800FFFFFFF | 128MB | kernel .data segment |
-| 0xFFFFFF8010000000 | 0xFFFFFF8017FFFFFF | 128MB | kernel .rodata segment |
-| 0xFFFFFF8018000000 | 0xFFFFFF801FFFFFFF | 128MB | kernel .bss segment |
-| 0xFFFFFF8020000000 | 0xFFFFFFFFFFFFFFFF | 511.5GB | unused hole |
+| 0xFFFFFF8000000000 | 0xFFFFFF800FFFFFFF | 256MB | kernel .text segment |
+| 0xFFFFFF8010000000 | 0xFFFFFF801FFFFFFF | 256MB | kernel .data segment |
+| 0xFFFFFF8020000000 | 0xFFFFFF802FFFFFFF | 256MB | kernel .rodata segment |
+| 0xFFFFFF8030000000 | 0xFFFFFF803FFFFFFF | 256MB | kernel .bss segment |
+| 0xFFFFFF8050000000 | 0xFFFFFFFFFFFFFFFF | 511GB | unused hole |

@@ -20,7 +20,7 @@ static __always_inline int slub_index(size_t sz)
     return -E2BIG;
 }
 
-static struct page *slub_alloc(struct kmem_cache *kc)
+static struct page* slub_alloc(struct kmem_cache *kc)
 {
     struct page *new_slub;
     void *curr_obj;
@@ -56,7 +56,7 @@ static struct page *slub_alloc(struct kmem_cache *kc)
  *
  * @return void* allocated object, NULL for failure
  */
-static void *__kmem_cache_alloc(struct kmem_cache *kc)
+static void* __kmem_cache_alloc(struct kmem_cache *kc)
 {
     void *obj = NULL;
 
