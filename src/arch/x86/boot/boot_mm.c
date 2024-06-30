@@ -146,8 +146,7 @@ static void* boot_mm_page_alloc(void)
 int boot_mm_pgtable_map(phys_addr_t pgtable,
                         virt_addr_t va,
                         phys_addr_t pa, 
-                        page_attr_t attr,
-                        bool has_remapped)
+                        page_attr_t attr)
 {
     pgd_t *pgd;
     pud_t *pud;
@@ -159,9 +158,6 @@ int boot_mm_pgtable_map(phys_addr_t pgtable,
     int pte_i = PTE_ENTRY(va);
 
     pgd = (pgd_t*) pgtable;
-    if (has_remapped) {
-        pgd = (pgd_t*) phys_to_virt((phys_addr_t) pgd);
-    }
     if (!pgd[pgd_i]) {
         pgd[pgd_i] = (pgd_t) boot_mm_page_alloc();
         if (IS_ERR_PTR((void*) pgd[pgd_i])) {
@@ -169,20 +165,11 @@ int boot_mm_pgtable_map(phys_addr_t pgtable,
             return -ENOMEM;
         }
 
-        if (has_remapped) {
-            boot_memset(
-                (void*) phys_to_virt((phys_addr_t) pgd[pgd_i]), 0 ,PAGE_SIZE
-            );
-        } else {
-            boot_memset((void*) ((phys_addr_t) pgd[pgd_i]), 0 ,PAGE_SIZE);
-        }
+        boot_memset((void*) ((phys_addr_t) pgd[pgd_i]), 0 ,PAGE_SIZE);
         pgd[pgd_i] |= PDE_DEFAULT;
     }
 
     pud = (pud_t*) (pgd[pgd_i] & PAGE_MASK);
-    if (has_remapped) {
-        pud = (pud_t*) phys_to_virt((phys_addr_t) pud);
-    }
     if (!pud[pud_i]) {
         pud[pud_i] = (pud_t) boot_mm_page_alloc();
         if (IS_ERR_PTR((void*) pud[pud_i])) {
@@ -190,20 +177,11 @@ int boot_mm_pgtable_map(phys_addr_t pgtable,
             return -ENOMEM;
         }
 
-        if (has_remapped) {
-            boot_memset(
-                (void*) phys_to_virt((phys_addr_t) pud[pud_i]), 0 ,PAGE_SIZE
-            );
-        } else {
-            boot_memset((void*) ((phys_addr_t) pud[pud_i]), 0 ,PAGE_SIZE);
-        }
+        boot_memset((void*) ((phys_addr_t) pud[pud_i]), 0 ,PAGE_SIZE);
         pud[pud_i] |= PDE_DEFAULT;
     }
 
     pmd = (pmd_t*) (pud[pud_i] & PAGE_MASK);
-    if (has_remapped) {
-        pmd = (pmd_t*) phys_to_virt((phys_addr_t) pmd);
-    }
     if (!pmd[pmd_i]) {
         pmd[pmd_i] = (pmd_t) boot_mm_page_alloc();
         if (IS_ERR_PTR((void*) pmd[pmd_i])) {
@@ -211,20 +189,11 @@ int boot_mm_pgtable_map(phys_addr_t pgtable,
             return -ENOMEM;
         }
 
-        if (has_remapped) {
-            boot_memset(
-                (void*) phys_to_virt((phys_addr_t) pmd[pmd_i]), 0 ,PAGE_SIZE
-            );
-        } else {
-            boot_memset((void*) ((phys_addr_t) pmd[pmd_i]), 0 ,PAGE_SIZE);
-        }
+        boot_memset((void*) ((phys_addr_t) pmd[pmd_i]), 0 ,PAGE_SIZE);
         pmd[pmd_i] |= PDE_DEFAULT;
     }
 
     pte = (pte_t*) (pmd[pmd_i] & PAGE_MASK);
-    if (has_remapped) {
-        pte = (pte_t*) phys_to_virt((phys_addr_t) pte);
-    }
     pte[pte_i] = pa | attr;
 
     return 0;
@@ -253,6 +222,8 @@ static int boot_mm_pgtable_init(void)
     virt_addr_t seg_virt_start, seg_virt_end;
     page_attr_t pte_attr;
     phys_addr_t physmem_start, physmem_end;
+    struct page *__pgdb_base;
+    size_t __pgdb_page_nr;
     int ret;
 
     boot_kern_pgtable = (phys_addr_t) boot_mm_page_alloc();
@@ -288,8 +259,7 @@ static int boot_mm_pgtable_init(void)
                 ret = boot_mm_pgtable_map(boot_kern_pgtable,
                                           seg_virt_start,
                                           seg_phys_start,
-                                          pte_attr,
-                                          false);
+                                          pte_attr);
                 if (ret < 0) {  /* out of memory */
                     return ret;
                 }
@@ -316,8 +286,7 @@ static int boot_mm_pgtable_init(void)
                 ret = boot_mm_pgtable_map(boot_kern_pgtable,
                                           seg_virt_start,
                                           seg_phys_start,
-                                          pte_attr,
-                                          false);
+                                          pte_attr);
                 if (ret < 0) {  /* out of memory */
                     return ret;
                 }
@@ -339,8 +308,7 @@ static int boot_mm_pgtable_init(void)
             ret = boot_mm_pgtable_map(boot_kern_pgtable,
                                       seg_virt_start,
                                       seg_phys_start,
-                                      PTE_ATTR_P | PTE_ATTR_RW,
-                                      false);
+                                      PTE_ATTR_P | PTE_ATTR_RW);
             if (ret < 0) {  /* out of memory */
                 return ret;
             }
@@ -370,21 +338,41 @@ static int boot_mm_pgtable_init(void)
         }
 
         while (base < end) {
-            if (vaddr > KERN_DIRECT_MAP_REGION_END) {   /* out of 128TB */
+            if (vaddr > KERN_DIRECT_MAP_REGION_END) {   /* out of 64TB */
                 break;
             }
 
             ret = boot_mm_pgtable_map(boot_kern_pgtable,
                                 vaddr,
                                 base,
-                                PTE_ATTR_P | PTE_ATTR_RW,
-                                false);
+                                PTE_ATTR_P | PTE_ATTR_RW);
             if (ret < 0) {
                 return ret;
             }
 
             base += PAGE_SIZE;
             vaddr += PAGE_SIZE;
+        }
+    }
+
+    /* map for page database (`struct page` array) */
+    __pgdb_base = (void*) KERN_PAGE_DATABASE_REGION_BASE;
+    __pgdb_page_nr = (physmem_end - physmem_start) / PAGE_SIZE;
+
+    for (size_t i = 0; i < __pgdb_page_nr; i += PGDB_PG_PAGE_NR) {
+        void *new_page = boot_mm_page_alloc();
+
+        if(IS_ERR_PTR(new_page)) {
+            return PTR_ERR(new_page);
+        }
+
+        boot_memset((void*) new_page, 0, PAGE_SIZE);
+        ret = boot_mm_pgtable_map(boot_kern_pgtable,
+                                  (virt_addr_t) &__pgdb_base[i],
+                                  (phys_addr_t) new_page,
+                                  PTE_ATTR_P | PTE_ATTR_RW);
+        if (ret < 0) {
+            return ret;
         }
     }
 
@@ -395,10 +383,8 @@ static int boot_mm_pgtable_init(void)
     physmem_base = KERN_DIRECT_MAP_REGION_BASE;
     kernel_base = KERN_SEG_TEXT_REGION_START;
     vmremap_base = KERN_DYNAMIC_MAP_REGION_BASE;
-
-    /* pre-init page database */
-    pgdb_base = (void*) KERN_PAGE_DATABASE_REGION_BASE;
-    pgdb_page_nr = (physmem_end - physmem_start) / PAGE_SIZE;
+    pgdb_base = __pgdb_base;
+    pgdb_page_nr = __pgdb_page_nr;
 
     /* remap some variables we may still use */
     elf_info_tag = (void*) phys_to_virt((phys_addr_t) elf_info_tag);
@@ -410,27 +396,6 @@ static int boot_mm_pgtable_init(void)
 int boot_mm_page_database_init(void)
 {
     int ret;
-
-    /* map for `struct page` array */
-    for (size_t i = 0; i < pgdb_page_nr; i += PGDB_PG_PAGE_NR) {
-        void *new_page = boot_mm_page_alloc();
-
-        if(IS_ERR_PTR(new_page)) {
-            return PTR_ERR(new_page);
-        }
-
-        boot_memset((void*) phys_to_virt((phys_addr_t) new_page),
-                    0,
-                    PAGE_SIZE);
-        ret = boot_mm_pgtable_map(boot_kern_pgtable,
-                                  (virt_addr_t) &pgdb_base[i],
-                                  (phys_addr_t) new_page,
-                                  PTE_ATTR_P | PTE_ATTR_RW,
-                                  true);
-        if (ret < 0) {
-            return ret;
-        }
-    }
 
     /**
      * as we set all page to 0 at the beginning,we don't need to care about hole
