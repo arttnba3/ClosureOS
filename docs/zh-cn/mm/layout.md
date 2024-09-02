@@ -1,0 +1,21 @@
+# 内存布局
+
+ClosureOS 的内存布局定义如下:
+
+| 起始地址 | 终止地址 | 大小 | 描述 |
+| :------------:|:-----------:|:----:|:-----------:|
+| 0x0000000000000000 | 0x00007FFFFFFFFFFF | 128TB | 用户模式进程的内存空间，每个进程间独立 |
+| 0x0000800000000000 | 0xFFFF7FFFFFFFFFFF | 16776960 TB | 未使用的空洞 |
+| | | | 所有进程间共享的内核空间虚拟内存 |
+| 0xFFFF800000000000 | 0xFFFFBFFFFFFFFFFF | 64TB | 对起始 64TB 物理内存的直接线性映射 (physmem_base) |
+| 0xFFFFC00000000000 | 0xFFFFCFFFFFFFFFFF | 16TB | 动态内核内存映射区 (vmremap_base) |
+| 0xFFFFD00000000000 | 0xFFFFEFFFFFFFFFFF | 32TB | 未使用的空洞 |
+| 0xFFFFF00000000000 | 0xFFFFF7FFFFFFFFFF | 8TB | 页数据库 (pgdb_base) |
+| 0xFFFFF80000000000 | 0xFFFFF9FFFFFFFFFF | 2TB | 未使用的空洞 |
+| 0xFFFFFA0000000000 | 0xFFFFFA0FFFFFFFFF | 64GB | 各进程间独立的内核栈 |
+| 0xFFFFFA1000000000 | 0xFFFFFF7FFFFFFFFF | 5568GB | 未使用的空洞 |
+| 0xFFFFFF8000000000 | 0xFFFFFF800FFFFFFF | 256MB | 内核 .text 段 |
+| 0xFFFFFF8010000000 | 0xFFFFFF801FFFFFFF | 256MB | 内核 .data 段 |
+| 0xFFFFFF8020000000 | 0xFFFFFF802FFFFFFF | 256MB | 内核 .rodata 段 |
+| 0xFFFFFF8030000000 | 0xFFFFFF803FFFFFFF | 256MB | 内核 .bss 段 |
+| 0xFFFFFF8050000000 | 0xFFFFFFFFFFFFFFFF | 511GB | 未使用的空洞 |

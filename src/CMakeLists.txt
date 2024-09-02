@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(ClosureOS)
 
-# for debugging only
-#set(CMAKE_VERBOSE_MAKEFILE ON)
+# basic config
+set(CMAKE_CXX_STANDARD 23)
 
 # languages we will use
 enable_language(C)

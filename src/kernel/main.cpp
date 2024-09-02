@@ -1,12 +1,20 @@
 #include <closureos/types.h>
 #include <boot/multiboot2.h>
 #include <closureos/lock.h>
+#include <closureos/cpp_base.hpp>
 
-extern void boot_puts(const char *str);
-extern void mm_core_init(void);
+extern "C" void boot_puts(const char *str);
+extern "C" void mm_core_init(void);
 
-extern int (*__init_array)(void);
-extern spinlock_t dtor_exit_lock;
+class TestC {
+public:
+    TestC(void)
+    {
+        boot_puts("WHATTT!");
+    }
+};
+
+//TestC tc;
 
 int global_constructor_caller(void)
 {
@@ -25,7 +33,7 @@ int global_constructor_caller(void)
     return 0;
 }
 
-void main(multiboot_uint8_t *mbi)
+extern "C" void main(multiboot_uint8_t *mbi)
 {
     mm_core_init();
     /* do nothing */

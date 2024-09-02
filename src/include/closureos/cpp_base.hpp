@@ -2,6 +2,7 @@
 #define CLOSUREOS_CPP_BASE_HPP
 
 #include <closureos/types.h>
+#include <closureos/lock.h>
 #include <closureos/compiler.h>
 
 /* memory management */
@@ -11,30 +12,15 @@ extern "C" {
     void kfree(void* object);
 }
 
-void* operator new(size_t sz)
-{
-    return kmalloc(sz);
-}
+extern void* operator new(size_t sz);
 
-void* operator new[](size_t sz)
-{
-    return kmalloc(sz);
-}
+extern void* operator new[](size_t sz);
 
-void operator delete(void *p)
-{
-    kfree(p);
-}
+extern void operator delete(void *p);
 
-void operator delete[](void *p)
-{
-    kfree(p);
-}
+extern void operator delete[](void *p);
 
-void operator delete(void *p, unsigned long sz)
-{
-    kfree(p);
-}
+extern void operator delete(void *p, unsigned long sz);
 
 /* global constructor/destructor */
 
@@ -46,7 +32,9 @@ struct dtor_info {
 };
 
 extern "C" {
-    extern "C" int __cxa_atexit ( void (*f)(void *), void *p, void *d );
+    extern int (*__init_array)(void);
+    extern spinlock_t dtor_exit_lock;
+    extern int __cxa_atexit ( void (*f)(void *), void *p, void *d );
     extern void __cxa_finalize(void* dso_handle);
     extern void* __dso_handle __attribute__((visibility("hidden")));
 }

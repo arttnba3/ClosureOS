@@ -57,3 +57,28 @@ void __cxa_pure_virtual()
 }
 
 } // extern "C"
+
+void* operator new(size_t sz)
+{
+    return kmalloc(sz);
+}
+
+void* operator new[](size_t sz)
+{
+    return kmalloc(sz);
+}
+
+void operator delete(void *p)
+{
+    kfree(p);
+}
+
+void operator delete[](void *p)
+{
+    kfree(p);
+}
+
+void operator delete(void *p, unsigned long sz)
+{
+    kfree(p);
+}
