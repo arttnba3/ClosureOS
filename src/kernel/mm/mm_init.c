@@ -1,7 +1,7 @@
 #include <closureos/mm/pages.h>
 #include <closureos/list.h>
 #include <closureos/lock.h>
-#include <closureos/mm/slub.h>
+#include <closureos/mm/slub.hpp>
 
 void freelist_init(void)
 {

@@ -14,7 +14,7 @@ public:
     }
 };
 
-//TestC tc;
+TestC tc;
 
 int global_constructor_caller(void)
 {

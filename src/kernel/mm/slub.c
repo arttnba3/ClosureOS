@@ -1,5 +1,5 @@
 #include <closureos/types.h>
-#include <closureos/mm/slub.h>
+#include <closureos/mm/slub.hpp>
 #include <closureos/err.h>
 
 struct kmem_cache kmem_cache_list[NR_KOBJECT_SIZE];

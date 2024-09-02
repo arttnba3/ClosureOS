@@ -1,5 +1,5 @@
-#ifndef MM_SLUB_H
-#define MM_SLUB_H
+#ifndef MM_SLUB_HPP
+#define MM_SLUB_HPP
 
 #include <closureos/types.h>
 #include <closureos/list.h>
@@ -44,4 +44,4 @@ extern void *kmalloc(size_t sz);
 extern void kfree(void* object);
 extern void kmem_cache_init(void);
 
-#endif // MM_SLUB_H
+#endif // MM_SLUB_HPP

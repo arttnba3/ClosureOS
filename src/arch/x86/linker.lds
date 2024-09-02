@@ -61,6 +61,7 @@ SECTIONS
 	{
 		*(.text)
 		*(.text.*)
+		*(.ltext)
 	}
 
 	. = ALIGN(4096);
@@ -75,6 +76,7 @@ SECTIONS
 	.data ALIGN(4096) : AT (__kernel_text_sz + __boot_end)
 	{
 		*(.data)
+		*(.ldata)
 		__init_array = .;
 		*(.init_array)
 		__fini_array = .;
@@ -93,6 +95,7 @@ SECTIONS
 	.rodata ALIGN(4096) : AT (__kernel_data_sz + __kernel_text_sz + __boot_end)
 	{
 		*(.rodata)
+		*(.rodata.*)
 	}
 
 	. = ALIGN(4096);
@@ -108,6 +111,7 @@ SECTIONS
 	{
 		*(COMMON)
 		*(.bss)
+		*(.lbss)
 	}
 
 	. = ALIGN(4096);

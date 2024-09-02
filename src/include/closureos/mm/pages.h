@@ -126,4 +126,4 @@ static __always_inline void put_page(struct page *p)
     }
 }
 
-#endif
+#endif // MM_PAGES_H
