@@ -95,7 +95,7 @@ function parse_cmd() {
 
 }
 
-declare -a needed_programs=("git" "cmake" "make" "cc" "c++" "ld" "ar" "ranlib" "xorriso" "mformat")
+declare -a needed_programs=("git" "cmake" "ninja" "clang" "clang++" "ld" "ar" "ranlib" "xorriso" "mformat")
 declare -a grub_rescue_programs=("grub-mkrescue" "grub2-mkrescue")
 declare -a grub_efi_dirs=("/usr/share/grub2/x86_64-efi" "/usr/lib/grub/x86_64-efi")
 declare -a grub_bios_dirs=("/usr/share/grub2/i386-pc" "/usr/lib/grub/i386-pc")
@@ -162,8 +162,11 @@ function build_project() {
 	rm -rf $BUILD_DIR
 	mkdir $BUILD_DIR
 	cd $BUILD_DIR
-	cmake $SOURCE_CODE_DIR
-	make
+	cmake $SOURCE_CODE_DIR \
+		-DCMAKE_C_COMPILER=clang \
+		-DCMAKE_CXX_COMPILER=clang++ \
+		-G Ninja
+	ninja
 
 }
 

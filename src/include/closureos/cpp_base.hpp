@@ -11,27 +11,27 @@ extern "C" {
     void kfree(void* object);
 }
 
-__always_inline void* operator new(size_t sz)
+void* operator new(size_t sz)
 {
     return kmalloc(sz);
 }
 
-__always_inline void* operator new[](size_t sz)
+void* operator new[](size_t sz)
 {
     return kmalloc(sz);
 }
 
-__always_inline void operator delete(void *p)
+void operator delete(void *p)
 {
     kfree(p);
 }
 
-__always_inline void operator delete[](void *p)
+void operator delete[](void *p)
 {
     kfree(p);
 }
 
-__always_inline void operator delete(void *p, unsigned long sz)
+void operator delete(void *p, unsigned long sz)
 {
     kfree(p);
 }
