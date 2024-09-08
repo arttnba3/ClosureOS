@@ -22,11 +22,13 @@ $ ./tools/scripts/repack_iso.sh
 
 ## Run
 
-We use QEMU to run it by default, or you can install it into your device manually.
+We defaultly recommend you to use QEMU to run it, just run this script after building:
 
 ```shell
 $ ./tools/scripts/run.sh
 ```
+
+By the way, you can also run it on your physical machine. Currently we don't have an installer yet, so you need to pack it on your own. All you need to do is just to install GRUB on your device, and put the kernel binary file in your expected path on the disk, then specify the kernel path in yout GRUB configuration file. We have an example GRUB configuration file under the `targets/<arch>/iso/boot/grub/grub.cfg` for your reference.
 
 ## License
 

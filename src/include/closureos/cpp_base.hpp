@@ -16,11 +16,13 @@ extern void* operator new(size_t sz);
 
 extern void* operator new[](size_t sz);
 
-extern void operator delete(void *p);
+extern void operator delete(void *p) noexcept;
 
-extern void operator delete[](void *p);
+extern void operator delete[](void *p) noexcept;
 
-extern void operator delete(void *p, unsigned long sz);
+extern void operator delete(void *p, unsigned long sz) noexcept;
+
+extern void operator delete[](void *p, unsigned long sz) noexcept;
 
 /* global constructor/destructor */
 

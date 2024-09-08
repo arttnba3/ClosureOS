@@ -6,16 +6,6 @@
 extern "C" void boot_puts(const char *str);
 extern "C" void mm_core_init(void);
 
-class TestC {
-public:
-    TestC(void)
-    {
-        boot_puts("WHATTT!");
-    }
-};
-
-TestC tc;
-
 int global_constructor_caller(void)
 {
     int (**init_array)(void) = &__init_array;

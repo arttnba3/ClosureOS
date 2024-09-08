@@ -68,17 +68,22 @@ void* operator new[](size_t sz)
     return kmalloc(sz);
 }
 
-void operator delete(void *p)
+void operator delete(void *p) noexcept
 {
     kfree(p);
 }
 
-void operator delete[](void *p)
+void operator delete[](void *p) noexcept
 {
     kfree(p);
 }
 
-void operator delete(void *p, unsigned long sz)
+void operator delete(void *p, unsigned long sz) noexcept
+{
+    kfree(p);
+}
+
+void operator delete[](void *p, unsigned long sz) noexcept
 {
     kfree(p);
 }
