@@ -34,7 +34,9 @@ By the way, you can also run it on your physical machine. Currently we don't hav
 
 ## Devemoplemt Details
 
-You can refer to the following passages to see how it has been developed, which will be public soon...
+You can refer to the following passages to see how it has been developed. Currently we only have Chinese version temporarily, and the English version is under hard writing and will be released soon...
+
+[现代 64 位 OS 开发手记 I：UEFI 启动与 GRUB 引导](https://arttnba3.github.io/2023/11/29/CODE-0X03-OSDEV64-I_UEFI-GRUB/)
 
 ## Author
 
