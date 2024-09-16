@@ -6,7 +6,7 @@
 extern "C" void boot_puts(const char *str);
 extern "C" void mm_core_init(void);
 
-int global_constructor_caller(void)
+auto global_constructor_caller(void) -> int
 {
     int (**init_array)(void) = &__init_array;
     int error;
@@ -23,7 +23,7 @@ int global_constructor_caller(void)
     return 0;
 }
 
-extern "C" void main(multiboot_uint8_t *mbi)
+extern "C" auto main(multiboot_uint8_t *mbi) -> void
 {
     mm_core_init();
     /* do nothing */
