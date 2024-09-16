@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+
 #ifndef X86_ASM_COM_H
 #define X86_ASM_COM_H
 
