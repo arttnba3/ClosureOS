@@ -20,6 +20,16 @@ void boot_pgtable_init(void)
 
 void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
 {
+    int ret;
+
     boot_pgtable_init();
+
+    if (boot_tty_init(mbi) < 0) {
+        asm volatile ("hlt");
+    }
+
+    boot_puts("[+] booting-stage tty initialization done.");
+
+    boot_puts("[*] Hlting...");
     asm volatile ("hlt");
 }
