@@ -1,0 +1,7 @@
+build/
+**kernel.bin
+**kernel.iso
+**.gdb_history
+**.vscode/
+**.idea/
+**cmake-build-debug/
