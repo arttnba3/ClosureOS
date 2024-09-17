@@ -62,6 +62,7 @@ SECTIONS
 		*(.text)
 		*(.text.*)
 		*(.ltext)
+		*(.ltext.*)
 	}
 
 	. = ALIGN(4096);
@@ -77,6 +78,10 @@ SECTIONS
 	{
 		*(.data)
 		*(.ldata)
+
+		/* we have to set these arraies aligned to 8 bytes */
+		. = ALIGN(8);
+
 		__init_array = .;
 		*(.init_array)
 		__fini_array = .;

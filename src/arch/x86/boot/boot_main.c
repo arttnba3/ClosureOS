@@ -6,6 +6,8 @@
 extern int boot_mm_init(multiboot_uint8_t *mbi);
 extern uint64_t boot_pud[512];
 
+extern void main(multiboot_uint8_t *mbi);
+
 /**
  * map 512 GB phys memory directly for booting stage
  * As it's troublesome to do it in assembly, I'd rather map only 1 GB in that,
@@ -30,6 +32,14 @@ void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
 
     boot_puts("[+] booting-stage tty initialization done.");
 
-    boot_puts("[*] Hlting...");
-    asm volatile ("hlt");
+    if ((ret = boot_mm_init(mbi)) < 0) {
+        boot_printstr("[x] FAILED to initialize memory unit, errno: ");
+        boot_printnum(ret);
+        boot_puts("\n[!] Abort booting.");
+        asm volatile ("hlt");
+    }
+
+    boot_puts("[+] booting-state memory initialization done.");
+
+    main(mbi);
 }

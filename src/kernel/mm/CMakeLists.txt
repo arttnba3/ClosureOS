@@ -1,0 +1,21 @@
+set(TARGET_NAME Kernel.MM)
+set(SOURCE_FILE)
+set(CXX_SOURCE_FILE)
+set(CXXM_SOURCE_FILE)
+
+file(GLOB CXX_SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB CXXM_SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/*.cppm")
+list(APPEND SOURCE_FILE ${CXX_SOURCE_FILE})
+list(APPEND SOURCE_FILE ${CXXM_SOURCE_FILE})
+
+if(NOT SOURCE_FILE)
+     message(FATAL_ERROR "no source files provided for \"${TARGET_NAME}\" interface")
+endif()
+
+add_library(${TARGET_NAME} "")
+target_sources(${TARGET_NAME}
+    PUBLIC
+        FILE_SET CXX_MODULES FILES ${CXXM_SOURCE_FILE}
+    PRIVATE
+        ${CXX_SOURCE_FILE}
+)
