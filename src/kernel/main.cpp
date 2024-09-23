@@ -1,3 +1,4 @@
+import kernel.base;
 import kernel.lib;
 import kernel.mm;
 
@@ -12,7 +13,7 @@ auto global_constructor_caller(void) -> int
     int (**init_array)(void) = &__init_array;
     int error;
 
-    for (lib::size_t i = 0; init_array[i]; i++) {
+    for (base::size_t i = 0; init_array[i]; i++) {
         error = init_array[i]();
         if (error) {
             return error;
@@ -24,6 +25,7 @@ auto global_constructor_caller(void) -> int
 
 extern "C" auto main(multiboot_uint8_t *mbi) -> void
 {
+    mm::mm_core_init();
     /* do nothing */
 
     if (global_constructor_caller() < 0) {

@@ -1,4 +1,4 @@
-set(TARGET_NAME Kernel.Lib.List)
+set(TARGET_NAME Kernel.Lib.Container)
 set(SOURCE_FILE)
 set(CXX_SOURCE_FILE)
 set(CXXM_SOURCE_FILE)
@@ -22,5 +22,5 @@ target_sources(${TARGET_NAME}
 
 target_link_libraries(
     ${TARGET_NAME}
-    Kernel.Lib.Container
+    Kernel.Base
 )

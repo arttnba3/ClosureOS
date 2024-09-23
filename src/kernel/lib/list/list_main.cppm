@@ -1,7 +1,9 @@
 export module kernel.lib.list;
 
+import kernel.lib.container;
+
 #include <closureos/types.h>
-#include <closureos/container.h>
+//#include <closureos/container.h>
 #include <closureos/compiler.h>
 
 export namespace lib {
@@ -58,9 +60,9 @@ auto __always_inline list_empty(EntryType entry) -> bool
 }
 
 template <typename ListPtrType, typename ContainerType, typename MemberType>
-auto __always_inline list_entry(ListPtrType ptr, ContainerType type, MemberType member) -> ContainerType
+auto __always_inline list_entry(ListPtrType *ptr, const MemberType ContainerType::* member) -> ContainerType*
 {
-    return container_of(ptr, typeof(type), member);
+    return container_of(ptr, member);
 }
 
 #define list_entry(ptr, type, member)       \

@@ -1,28 +1,28 @@
 export module kernel.mm;
+export import :heap;
 export import :layout;
 export import :pages;
 export import :types;
 
+import kernel.base;
 import kernel.lib;
 
 export namespace mm {
 
-class KMemCache;
+static auto pages_pool_init(void) -> void
+{
+    GloblPagePool->Reset();
 
-class PagePool {
-public:
-    PagePool(void);
-    ~PagePool();
-private:
-    struct page *pgdb;
-    size_t page_nr;
-};
+    for (base::size_t i = 0; i < pgdb_page_nr; i++) {
+        if (pgdb_base[i].type == PAGE_NORMAL_MEM && pgdb_base[i].ref_count < 0){
+            GloblPagePool->FreePages(&pgdb_base[i], 0);
+        }
+    }
+}
 
-class KMemCache {
-public:
-private:
-};
-
-
+auto mm_core_init(void) -> void
+{
+    pages_pool_init();
+}
 
 };

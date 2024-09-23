@@ -21,10 +21,12 @@ target_sources(${TARGET_NAME}
 )
 
 add_subdirectory(atomic)
+add_subdirectory(container)
 add_subdirectory(list)
 
 target_link_libraries(
     ${TARGET_NAME}
     Kernel.Lib.Atomic
+    Kernel.Lib.Container
     Kernel.Lib.List
 )

@@ -6,6 +6,7 @@
  * This work is licensed under the terms of the GNU GPL, version 2 or later.
 */
 
+import kernel.base;
 import kernel.mm;
 import kernel.lib;
 
@@ -226,7 +227,7 @@ static int boot_mm_pgtable_init(void)
     mm::page_attr_t pte_attr;
     mm::phys_addr_t physmem_start, physmem_end;
     mm::page *pgdb_base;
-    lib::size_t pgdb_page_nr;
+    base::size_t pgdb_page_nr;
     int ret;
 
     boot_kern_pgtable = (mm::phys_addr_t) boot_mm_page_alloc();
@@ -362,7 +363,7 @@ static int boot_mm_pgtable_init(void)
     pgdb_base = (mm::page*) mm::KERN_PAGE_DATABASE_REGION_BASE;
     pgdb_page_nr = (physmem_end - physmem_start) / PAGE_SIZE;
 
-    for (lib::size_t i = 0; i < pgdb_page_nr; i += mm::PGDB_PG_PAGE_NR) {
+    for (base::size_t i = 0; i < pgdb_page_nr; i += mm::PGDB_PG_PAGE_NR) {
         void *new_page = boot_mm_page_alloc();
 
         if(IS_ERR_PTR(new_page)) {
@@ -407,12 +408,13 @@ int boot_mm_page_database_init(void)
     for (int i = 0; i < mmap_entry_nr; i++) {
         mm::phys_addr_t base = mmap_tag->entries[i].addr;
         mm::phys_addr_t end = base + mmap_tag->entries[i].len;
-        lib::size_t pfn;
+        base::size_t pfn;
 
         while (base < end) {
             pfn = base / PAGE_SIZE;
             mm::pgdb_base[pfn].migrate_type = mm::MIGRATE_UNMOVABLE;
             mm::pgdb_base[pfn].lock.Reset();
+            lib::list_head_init(&mm::pgdb_base[pfn].list);
 
             switch (mmap_tag->entries[i].type) {
             case MULTIBOOT_MEMORY_AVAILABLE:

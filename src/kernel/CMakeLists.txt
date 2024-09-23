@@ -11,11 +11,13 @@ else()
     add_library(${TARGET_NAME} INTERFACE)
 endif()
 
+add_subdirectory(base)
 add_subdirectory(lib)
 add_subdirectory(mm)
 
 target_link_libraries(
     ${TARGET_NAME}
+    Kernel.Base
     Kernel.Lib
     Kernel.MM
 )
