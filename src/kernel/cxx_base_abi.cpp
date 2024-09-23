@@ -1,6 +1,7 @@
 #include <closureos/cpp_base.hpp>
-#include <closureos/lock.h>
 #include <closureos/errno.h>
+
+import kernel.lib;
 
 extern "C" {
 void* __dso_handle __attribute__((visibility("hidden")));
@@ -26,13 +27,13 @@ int __cxa_atexit(void (*destructor) (void *), void *arg, void *__dso_handle)
     return 0;
 }
 
-spinlock_t dtor_exit_lock;
+lib::atomic::SpinLock dtor_exit_lock;
 
 void __cxa_finalize(void* dso_handle)
 {
     struct dtor_info **pdtor = &global_dtors;
 
-    spin_lock(&dtor_exit_lock);
+    dtor_exit_lock.Lock();
 
     while (*pdtor) {
         struct dtor_info *dtor = *pdtor;
@@ -46,7 +47,7 @@ void __cxa_finalize(void* dso_handle)
         }
     }
 
-    spin_unlock(&dtor_exit_lock);
+    dtor_exit_lock.UnLock();
 }
 
 void __cxa_pure_virtual()

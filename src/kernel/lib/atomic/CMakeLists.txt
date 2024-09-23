@@ -1,4 +1,4 @@
-set(TARGET_NAME Kernel.MM)
+set(TARGET_NAME Kernel.Lib.Atomic)
 set(SOURCE_FILE)
 set(CXX_SOURCE_FILE)
 set(CXXM_SOURCE_FILE)
@@ -18,9 +18,4 @@ target_sources(${TARGET_NAME}
         FILE_SET CXX_MODULES FILES ${CXXM_SOURCE_FILE}
     PRIVATE
         ${CXX_SOURCE_FILE}
-)
-
-target_link_libraries(
-    ${TARGET_NAME}
-    Kernel.Lib
 )

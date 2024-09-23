@@ -6,4 +6,5 @@
 #ifndef barrier
     #define barrier() __asm__ __volatile__("": : :"memory")
 #endif
+
 #endif // CLOSUREOS_COMPILER_H

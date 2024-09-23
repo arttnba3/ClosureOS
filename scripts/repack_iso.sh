@@ -16,6 +16,8 @@ export SOURCE_CODE_DIR="$PROJECT_ROOT_DIR/src"
 export BUILD_DIR="$PROJECT_ROOT_DIR/build"
 export TARGET_DIR="$PROJECT_ROOT_DIR/targets/x86_64/iso"
 export IMAGE_OUTPUT_DIR="$PROJECT_ROOT_DIR"
+export DEFAULT_C_COMPILER="gcc"
+export DEFAULT_CXX_COMPILER="g++"
 
 function show_help() {
 
@@ -163,8 +165,8 @@ function build_project() {
 	mkdir $BUILD_DIR
 	cd $BUILD_DIR
 	cmake $SOURCE_CODE_DIR \
-		-DCMAKE_C_COMPILER=clang \
-		-DCMAKE_CXX_COMPILER=clang++ \
+		-DCMAKE_C_COMPILER=$DEFAULT_C_COMPILER \
+		-DCMAKE_CXX_COMPILER=$DEFAULT_CXX_COMPILER \
 		-G Ninja
 	ninja
 

@@ -46,6 +46,8 @@ typedef __u64   u64;
     #define NULL ((void*)0)
 #endif
 
+#ifndef __cplusplus
+
 #ifndef true
     #define true 1
 #endif
@@ -57,5 +59,7 @@ typedef __u64   u64;
 #ifndef bool
     #define bool uint8_t
 #endif
+
+#endif // __cplusplus
 
 #endif // CLOSUREOS_TYPES_H

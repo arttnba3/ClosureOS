@@ -13,7 +13,7 @@ extern void main(multiboot_uint8_t *mbi);
  * As it's troublesome to do it in assembly, I'd rather map only 1 GB in that,
  * and fulfill the left part in the PUD page here.
 */
-void boot_pgtable_init(void)
+static void boot_pgtable_init(void)
 {
     for (uint64_t i = 1; i < 512; i++) {
         boot_pud[i] = (i*0x40000000) | (PDE_ATTR_P | PDE_ATTR_RW | PDE_ATTR_PS);
@@ -40,6 +40,7 @@ void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
     }
 
     boot_puts("[+] booting-state memory initialization done.");
+    asm volatile("hlt");
 
     main(mbi);
 }

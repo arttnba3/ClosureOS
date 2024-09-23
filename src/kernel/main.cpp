@@ -1,6 +1,5 @@
 #include <closureos/types.h>
 #include <boot/multiboot2.h>
-#include <closureos/lock.h>
 #include <closureos/cpp_base.hpp>
 
 /* temporarily here, remove sooo... */
@@ -17,8 +16,6 @@ auto global_constructor_caller(void) -> int
             return error;
         }
     }
-
-    spin_lock_init(&dtor_exit_lock);
 
     return 0;
 }

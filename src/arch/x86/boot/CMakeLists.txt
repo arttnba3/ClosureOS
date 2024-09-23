@@ -3,6 +3,7 @@ set(SOURCE_FILE)
 
 file(GLOB SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/*.S"
                       "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
                       "${CMAKE_CURRENT_SOURCE_DIR}/boot_font.o")
 
 if(SOURCE_FILE)
@@ -10,3 +11,8 @@ if(SOURCE_FILE)
 else()
     message(FATAL_ERROR "no source files provided for boot")
 endif()
+
+target_link_libraries(
+    ${TARGET_NAME}
+    Kernel.MM
+)

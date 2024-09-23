@@ -1,4 +1,4 @@
-set(TARGET_NAME Kernel.MM)
+set(TARGET_NAME Kernel.Lib)
 set(SOURCE_FILE)
 set(CXX_SOURCE_FILE)
 set(CXXM_SOURCE_FILE)
@@ -20,7 +20,11 @@ target_sources(${TARGET_NAME}
         ${CXX_SOURCE_FILE}
 )
 
+add_subdirectory(atomic)
+add_subdirectory(list)
+
 target_link_libraries(
     ${TARGET_NAME}
-    Kernel.Lib
+    Kernel.Lib.Atomic
+    Kernel.Lib.List
 )
