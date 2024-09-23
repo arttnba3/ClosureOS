@@ -45,6 +45,7 @@ public:
     auto Lock(void) -> void;
     auto TryLock(void) -> bool;
     auto UnLock(void) -> void;
+    auto Reset(void) -> void;
 
 private:
     atomic_t counter;

@@ -40,7 +40,6 @@ void boot_main(unsigned int magic, multiboot_uint8_t *mbi)
     }
 
     boot_puts("[+] booting-state memory initialization done.");
-    asm volatile("hlt");
 
     main(mbi);
 }

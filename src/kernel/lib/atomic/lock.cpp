@@ -7,7 +7,7 @@ namespace lib::atomic {
 
 SpinLock::SpinLock()
 {
-    atomic_set(&this->counter, SPINLOCK_FREE);
+    this->Reset();
 }
 
 SpinLock::~SpinLock()
@@ -28,6 +28,11 @@ auto SpinLock::TryLock(void) -> bool
 }
 
 auto SpinLock::UnLock(void) -> void
+{
+    atomic_set(&this->counter, SPINLOCK_FREE);
+}
+
+auto SpinLock::Reset(void) -> void
 {
     atomic_set(&this->counter, SPINLOCK_FREE);
 }

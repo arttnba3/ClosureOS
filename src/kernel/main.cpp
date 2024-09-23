@@ -1,4 +1,6 @@
-#include <closureos/types.h>
+import kernel.lib;
+import kernel.mm;
+
 #include <boot/multiboot2.h>
 #include <closureos/cpp_base.hpp>
 
@@ -10,7 +12,7 @@ auto global_constructor_caller(void) -> int
     int (**init_array)(void) = &__init_array;
     int error;
 
-    for (size_t i = 0; init_array[i]; i++) {
+    for (lib::size_t i = 0; init_array[i]; i++) {
         error = init_array[i]();
         if (error) {
             return error;

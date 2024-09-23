@@ -398,6 +398,64 @@ static int boot_mm_pgtable_init(void)
 
 int boot_mm_page_database_init(void)
 {
+    int ret;
+
+    /**
+     * as we set all page to 0 at the beginning,we don't need to care about hole
+     * because the type for memory hole is 0 in our design
+    */
+    for (int i = 0; i < mmap_entry_nr; i++) {
+        mm::phys_addr_t base = mmap_tag->entries[i].addr;
+        mm::phys_addr_t end = base + mmap_tag->entries[i].len;
+        lib::size_t pfn;
+
+        while (base < end) {
+            pfn = base / PAGE_SIZE;
+            mm::pgdb_base[pfn].migrate_type = mm::MIGRATE_UNMOVABLE;
+            mm::pgdb_base[pfn].lock.Reset();
+
+            switch (mmap_tag->entries[i].type) {
+            case MULTIBOOT_MEMORY_AVAILABLE:
+                mm::pgdb_base[pfn].type = mm::PAGE_NORMAL_MEM;
+                mm::pgdb_base[pfn].kc = nullptr;
+                mm::pgdb_base[pfn].freelist = nullptr;
+                mm::pgdb_base[pfn].obj_nr = 0;
+
+                if (base < curr_avail || addr_is_in_used_range(base)) {
+                    /* used page */
+                    lib::atomic::atomic_set(&mm::pgdb_base[pfn].ref_count, 0);
+                } else {
+                    /* free page */
+                    lib::atomic::atomic_set(&mm::pgdb_base[pfn].ref_count, -1);
+                }
+                break;
+            case MULTIBOOT_MEMORY_RESERVED:
+                mm::pgdb_base[pfn].type = mm::PAGE_RESERVED;
+                break;
+            case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
+                mm::pgdb_base[pfn].type = mm::PAGE_ACPI_RECLAIMABLE;
+                break;
+            case MULTIBOOT_MEMORY_NVS:
+                mm::pgdb_base[pfn].type = mm::PAGE_NVS;
+                break;
+            case MULTIBOOT_MEMORY_BADRAM:
+                mm::pgdb_base[pfn].type = mm::PAGE_BADRAM;
+                break;
+            default:
+                mm::pgdb_base[pfn].type = mm::PAGE_UNKNOWN;
+                /*
+                boot_printstr("[!] Warning: unknown memory type [");
+                boot_printnum(mmap_tag->entries[i].type);
+                boot_printstr("] at addr: 0x");
+                boot_printhex(base);
+                boot_putchar('\n');
+                */
+                break;
+            }
+
+            base += PAGE_SIZE;
+        }
+    }
 
     return 0;
 }
