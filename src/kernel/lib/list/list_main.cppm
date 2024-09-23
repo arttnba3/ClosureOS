@@ -3,7 +3,6 @@ export module kernel.lib.list;
 import kernel.lib.container;
 
 #include <closureos/types.h>
-//#include <closureos/container.h>
 #include <closureos/compiler.h>
 
 export namespace lib {
