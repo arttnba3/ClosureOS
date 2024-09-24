@@ -300,12 +300,12 @@ public:
     auto Malloc(base::size_t sz) -> void*;
     auto Free(void *obj) -> void;
 
-    auto Init(void) -> void;
+    auto Init(KMemCache **caches, base::size_t cache_nr, base::size_t *cache_obj_sizes) -> void;
 
 private:
     KMemCache **caches;
     base::size_t cache_nr;
-    base::size_t *cache_obj_sz;
+    base::size_t *cache_obj_sizes;
 };
 
 static base::uint8_t GloblKHeapPoolMem[sizeof(KHeapPool)];
@@ -326,7 +326,7 @@ auto KHeapPool::Malloc(base::size_t sz) -> void*
     void *obj = nullptr;
 
     for (auto i = 0; i < this->cache_nr; i++) {
-        if (sz < this->cache_obj_sz[i]) {
+        if (sz < this->cache_obj_sizes[i]) {
             obj = this->caches[i]->Malloc();
             if (obj) {
                 break;
@@ -352,9 +352,11 @@ auto KHeapPool::Free(void *obj) -> void
     page->kc->Free(page, obj);
 }
 
-auto KHeapPool::Init(void) -> void
+auto KHeapPool::Init(KMemCache **caches, base::size_t cache_nr, base::size_t *cache_obj_sizes) -> void
 {
-
+    this->caches = caches;
+    this->cache_nr = cache_nr;
+    this->cache_obj_sizes = cache_obj_sizes;
 }
 
 };
