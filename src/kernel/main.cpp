@@ -6,7 +6,9 @@ import kernel.mm;
 #include <closureos/cpp_base.hpp>
 
 /* temporarily here, remove sooo... */
-extern "C" void boot_puts(const char *str);
+extern "C" {
+#include <boot/tty.h>
+};
 
 auto global_constructor_caller(void) -> int
 {
@@ -26,7 +28,6 @@ auto global_constructor_caller(void) -> int
 extern "C" auto main(multiboot_uint8_t *mbi) -> void
 {
     mm::mm_core_init();
-    /* do nothing */
 
     if (global_constructor_caller() < 0) {
         boot_puts("[x] FAILED at invoking global constructors, hlting...");

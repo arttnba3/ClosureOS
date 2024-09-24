@@ -226,7 +226,7 @@ static int boot_mm_pgtable_init(void)
     mm::virt_addr_t seg_virt_start, seg_virt_end;
     mm::page_attr_t pte_attr;
     mm::phys_addr_t physmem_start, physmem_end;
-    mm::page *pgdb_base;
+    mm::Page *pgdb_base;
     base::size_t pgdb_page_nr;
     int ret;
 
@@ -360,7 +360,7 @@ static int boot_mm_pgtable_init(void)
     }
 
     /* map for page database (`struct page` array) */
-    pgdb_base = (mm::page*) mm::KERN_PAGE_DATABASE_REGION_BASE;
+    pgdb_base = (mm::Page*) mm::KERN_PAGE_DATABASE_REGION_BASE;
     pgdb_page_nr = (physmem_end - physmem_start) / PAGE_SIZE;
 
     for (base::size_t i = 0; i < pgdb_page_nr; i += mm::PGDB_PG_PAGE_NR) {

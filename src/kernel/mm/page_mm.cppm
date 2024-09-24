@@ -34,11 +34,12 @@ enum migrate_type {
 };
 
 /**
- * struct page
+ * struct Page
  * - representing a `physical page frame`
  * - page-aligned size
  */
-struct page {
+struct Page {
+public:
     lib::ListHead list;
     struct {
         /* for page allocator */
@@ -60,29 +61,29 @@ struct page {
 } __attribute__((aligned(64)));
 
 /* pages array representing all pages */
-page *pgdb_base;
+Page *pgdb_base;
 base::size_t pgdb_page_nr;
 
-inline constexpr base::size_t PGDB_PG_PAGE_NR = (PAGE_SIZE / sizeof(struct page));
+inline constexpr base::size_t PGDB_PG_PAGE_NR = (PAGE_SIZE / sizeof(Page));
 
 /* page operations */
 
-__always_inline pfn_t page_to_pfn(page *p)
+__always_inline pfn_t page_to_pfn(Page *p)
 {
     return p - pgdb_base;
 }
 
-__always_inline struct page* pfn_to_page(pfn_t pfn)
+__always_inline Page* pfn_to_page(pfn_t pfn)
 {
     return &pgdb_base[pfn];
 }
 
-__always_inline phys_addr_t page_to_phys(page *p)
+__always_inline phys_addr_t page_to_phys(Page *p)
 {
     return (p - pgdb_base) * PAGE_SIZE;
 }
 
-__always_inline virt_addr_t page_to_virt(page *p)
+__always_inline virt_addr_t page_to_virt(Page *p)
 {
     return physmem_base + page_to_phys(p);
 }
@@ -97,14 +98,35 @@ __always_inline virt_addr_t phys_to_virt(phys_addr_t addr)
     return addr + physmem_base;
 }
 
-__always_inline struct page* phys_to_page(phys_addr_t addr)
+__always_inline Page* phys_to_page(phys_addr_t addr)
 {
     return &pgdb_base[(addr & PAGE_MASK) / PAGE_SIZE];
 }
 
-__always_inline struct page* virt_to_page(virt_addr_t addr)
+__always_inline Page* virt_to_page(virt_addr_t addr)
 {
     return phys_to_page(virt_to_phys(addr));
+}
+
+__always_inline struct Page *get_head_page(struct Page *p)
+{
+    return p->is_head 
+          ? p 
+          : (struct Page*)((virt_addr_t) p & ~((sizeof(*p)*(1 << p->order))-1));
+}
+
+__always_inline void get_page(struct Page *p)
+{
+    lib::atomic::atomic_inc(&get_head_page(p)->ref_count);
+}
+
+__always_inline void put_page(struct Page *p)
+{
+    p = get_head_page(p);
+
+    if (lib::atomic::atomic_dec(&p->ref_count) < 0) {
+        //free_pages(p, p->order);
+    }
 }
 
 /**
@@ -116,7 +138,7 @@ __always_inline size_t buddy_page_pfn(pfn_t pfn, int order)
     return pfn ^ (1 << order);
 }
 
-__always_inline struct page* get_page_buddy(page *p, int order)
+__always_inline Page* get_page_buddy(Page *p, int order)
 {
     pfn_t pfn = page_to_pfn(p);
     return pfn_to_page(buddy_page_pfn(pfn, order));
@@ -129,8 +151,8 @@ public:
     PagePool(void);
     ~PagePool();
 
-    auto AllocPages(base::size_t order) -> page *;
-    auto FreePages(page *page, base::size_t order) -> void;
+    auto AllocPages(base::size_t order) -> Page *;
+    auto FreePages(Page *page, base::size_t order) -> void;
 
     /* for booting stage only */
     auto Reset(void) -> void;
@@ -139,10 +161,10 @@ private:
     lib::ListHead freelist[MAX_PAGE_ORDER];
     lib::atomic::SpinLock lock;
 
-    auto __alloc_page_direct(base::size_t order) -> page *;
-    auto __alloc_pages(base::size_t order) -> page *;
+    auto __alloc_page_direct(base::size_t order) -> Page *;
+    auto __alloc_pages(base::size_t order) -> Page *;
 
-    auto __free_pages(page *p, base::size_t order) -> void;
+    auto __free_pages(Page *p, base::size_t order) -> void;
 
     auto __reclaim_memory(void) -> void;
 };
@@ -160,14 +182,14 @@ PagePool::~PagePool(void)
     /* do nothing */
 }
 
-auto PagePool::__alloc_page_direct(base::size_t order) -> page *
+auto PagePool::__alloc_page_direct(base::size_t order) -> Page *
 {
-    page *p = nullptr;
+    Page *p = nullptr;
     base::size_t allocated = order;
 
     while (allocated < MAX_PAGE_ORDER) {
         if (!lib::list_empty(&this->freelist[allocated])) {
-            p = lib::list_entry(this->freelist[allocated].next, &page::list);
+            p = lib::list_entry(this->freelist[allocated].next, &Page::list);
             lib::list_del(&p->list);
             break;
         } else {
@@ -195,9 +217,9 @@ out:
     return p;
 }
 
-auto PagePool::__alloc_pages(base::size_t order) -> page *
+auto PagePool::__alloc_pages(base::size_t order) -> Page *
 {
-    page *p = nullptr;
+    Page *p = nullptr;
     bool redo = false;
 
     if (order >= MAX_PAGE_ORDER) {
@@ -235,7 +257,7 @@ out:
     return p;
 }
 
-auto PagePool::__free_pages(page *p, base::size_t order) -> void
+auto PagePool::__free_pages(Page *p, base::size_t order) -> void
 {
     if (!p) {
         return;
@@ -249,7 +271,7 @@ auto PagePool::__free_pages(page *p, base::size_t order) -> void
 
     /* try to combine nearby pages */
     while (order < (MAX_PAGE_ORDER - 1)) {
-        page *buddy;
+        Page *buddy;
 
         buddy = get_page_buddy(p, order);
         if (buddy->type == PAGE_NORMAL_MEM && buddy->is_free && buddy->is_head){
@@ -270,7 +292,8 @@ auto PagePool::__free_pages(page *p, base::size_t order) -> void
         p[i].is_head = false;
         p[i].is_free = true;
         p[i].order = order;
-        p->ref_count = p->map_count = -1;
+        lib::atomic::atomic_set(&p->ref_count, -1);
+        lib::atomic::atomic_set(&p->map_count, -1);
     }
     p->is_head = true;
 
@@ -284,12 +307,12 @@ auto PagePool::__reclaim_memory(void) -> void
     /* TODO: reclame movable memory pages */
 }
 
-auto PagePool::AllocPages(base::size_t order) -> page *
+auto PagePool::AllocPages(base::size_t order) -> Page *
 {
     return this->__alloc_pages(order);
 }
 
-auto PagePool::FreePages(page *page, base::size_t order) -> void
+auto PagePool::FreePages(Page *page, base::size_t order) -> void
 {
     this->__free_pages(page, order);
 }

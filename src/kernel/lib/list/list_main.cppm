@@ -1,8 +1,8 @@
 export module kernel.lib.list;
 
+import kernel.base;
 import kernel.lib.container;
 
-#include <closureos/types.h>
 #include <closureos/compiler.h>
 
 export namespace lib {
