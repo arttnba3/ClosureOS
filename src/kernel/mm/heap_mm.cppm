@@ -26,6 +26,20 @@ enum {
     KOBJECT_SIZE_NR,
 };
 
+base::size_t kobj_default_size[KOBJECT_SIZE_NR] = {
+    16,
+    32,
+    64,
+    128,
+    192,
+    256,
+    512,
+    1024,
+    2048,
+    4096,
+    8192,
+};
+
 inline constexpr base::size_t CACHE_POOL_MAX_NR = 0x10;
 
 /* size-specific memory pool, front end of PagePool */
@@ -35,7 +49,7 @@ public:
     ~KMemCache();
 
     auto Malloc(void) -> void*;
-    auto Free(void *addr) -> void;
+    auto Free(Page *page, void *obj) -> void;
 
     auto AddPool(PagePool *pool) -> bool;
     auto RemovePool(base::size_t index) -> PagePool*;
@@ -62,15 +76,28 @@ private:
     void **freelist;
 
     auto __internal_obj_alloc(void) -> void*;
+    auto __internal_obj_free(Page *page, void *obj) -> void;
 
     /* infrastructure */
 
     lib::atomic::SpinLock lock;
 };
 
-/* static memory initializer */
+/* static memory initializer to avoid constructor to be existed */
 base::uint8_t GloblKMemCacheGroupMem[KOBJECT_SIZE_NR][sizeof(KMemCache)];
-KMemCache *GloblKMemCacheGroup = (KMemCache*) &GloblKMemCacheGroupMem;
+KMemCache *GloblKMemCacheGroup[KOBJECT_SIZE_NR] = {
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_16],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_32],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_64],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_128],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_192],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_256],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_512],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_1K],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_2K],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_4K],
+    (KMemCache*) &GloblKMemCacheGroupMem[KOBJECT_8K],
+};
 
 KMemCache::KMemCache(void)
 {
@@ -95,9 +122,13 @@ auto KMemCache::Malloc(void) -> void*
     return obj;
 }
 
-auto KMemCache::Free(void *addr) -> void
+auto KMemCache::Free(Page *page, void *obj) -> void
 {
+    this->lock.Lock();
 
+    this->__internal_obj_free(page, obj);
+
+    this->lock.UnLock();
 }
 
 auto KMemCache::AddPool(PagePool *pool) -> bool
@@ -242,16 +273,88 @@ out:
     return obj;
 }
 
+auto KMemCache::__internal_obj_free(Page *page, void *obj) -> void
+{
+    page->obj_nr++;
+
+    if (page == this->current) {
+        *(void**) obj = this->freelist;
+        this->freelist = (void**) obj;
+    } else {
+        if (page->obj_nr == 1) {    /* on full list */
+            list_del(&page->list);
+            list_add_next(&this->full, &page->list);
+        } else if (page->obj_nr == this->page_obj_nr) {   /* all freed */
+            list_del(&page->list);
+            put_page(page);
+        }
+    }
+}
+
 /* General front end of KMemCache */
 class KHeapPool {
 public:
+    KHeapPool(void);
+    ~KHeapPool();
+
+    auto Malloc(base::size_t sz) -> void*;
+    auto Free(void *obj) -> void;
+
+    auto Init(void) -> void;
 
 private:
+    KMemCache **caches;
+    base::size_t cache_nr;
+    base::size_t *cache_obj_sz;
 };
 
-class GloblKHeapPool {
-public:
-private:
-};
+static base::uint8_t GloblKHeapPoolMem[sizeof(KHeapPool)];
+KHeapPool *GloblKHeapPool = (KHeapPool*) &GloblKHeapPoolMem;
+
+KHeapPool::KHeapPool(void)
+{
+    /* do nothing */    
+}
+
+KHeapPool::~KHeapPool()
+{
+    /* do nothing */
+}
+
+auto KHeapPool::Malloc(base::size_t sz) -> void*
+{
+    void *obj = nullptr;
+
+    for (auto i = 0; i < this->cache_nr; i++) {
+        if (sz < this->cache_obj_sz[i]) {
+            obj = this->caches[i]->Malloc();
+            if (obj) {
+                break;
+            }
+        }
+    }
+
+    /* TODO: add large size alloc */
+
+    return obj;
+}
+
+auto KHeapPool::Free(void *obj) -> void
+{
+    Page *page;
+
+    page = get_head_page(virt_to_page((virt_addr_t) obj));
+    if (!page->kc) { /* TODO: add initializer for kc */
+        put_page(page);
+        return ;
+    }
+
+    page->kc->Free(page, obj);
+}
+
+auto KHeapPool::Init(void) -> void
+{
+
+}
 
 };

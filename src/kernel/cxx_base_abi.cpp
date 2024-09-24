@@ -2,6 +2,7 @@
 #include <closureos/errno.h>
 
 import kernel.lib;
+import kernel.mm;
 
 extern "C" {
 void* __dso_handle __attribute__((visibility("hidden")));
@@ -61,32 +62,30 @@ void __cxa_pure_virtual()
 
 void* operator new(size_t sz)
 {
-    //return kmalloc(sz);
-    return nullptr;
+    return mm::GloblKHeapPool->Malloc(sz);
 }
 
 void* operator new[](size_t sz)
 {
-    //return kmalloc(sz);
-    return nullptr;
+    return mm::GloblKHeapPool->Malloc(sz);
 }
 
 void operator delete(void *p) noexcept
 {
-    //kfree(p);
+    mm::GloblKHeapPool->Free(p);
 }
 
 void operator delete[](void *p) noexcept
 {
-    //kfree(p);
+    mm::GloblKHeapPool->Free(p);
 }
 
 void operator delete(void *p, unsigned long sz) noexcept
 {
-    //kfree(p);
+    mm::GloblKHeapPool->Free(p);
 }
 
 void operator delete[](void *p, unsigned long sz) noexcept
 {
-    //kfree(p);
+    mm::GloblKHeapPool->Free(p);
 }
