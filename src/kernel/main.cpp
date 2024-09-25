@@ -16,14 +16,8 @@ auto global_constructor_caller(void) -> int
     int error;
 
     for (base::size_t i = 0; init_array[i]; i++) {
-        boot_printstr("func to be called: 0x");
-        boot_printhex((base::uint64_t) (init_array[i]));
-        boot_putchar('\n');
         error = init_array[i]();
         if (error) {
-            boot_printstr("Error code: ");
-            boot_printnum(error);
-            boot_putchar('\n');
             return error;
         }
     }
@@ -31,7 +25,7 @@ auto global_constructor_caller(void) -> int
     return 0;
 }
 
-extern "C" auto main(multiboot_uint8_t *mbi) -> void
+auto main(multiboot_uint8_t *mbi) -> void
 {
     mm::mm_core_init();
 

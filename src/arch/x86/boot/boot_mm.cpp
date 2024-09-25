@@ -33,7 +33,7 @@ mm::phys_addr_t curr_avail, curr_end;
  * Note that the result could be physical 0, NULL should not be use as failure,
  * but a -EMOMEM or some other error number should be returned.
 */
-static void* boot_mm_page_alloc_internal(void)
+static auto boot_mm_page_alloc_internal(void) -> void*
 {
     void *res;
 
@@ -89,7 +89,7 @@ static void* boot_mm_page_alloc_internal(void)
 static struct multiboot_tag_elf_sections *elf_info_tag = nullptr;
 mm::phys_addr_t multiboot_tag_start, multiboot_tag_end;
 
-static bool addr_is_in_used_range(mm::phys_addr_t addr)
+static auto addr_is_in_used_range(mm::phys_addr_t addr) -> bool
 {
     struct elf64_shdr *shdr;
     void *shdr_end;
@@ -132,7 +132,7 @@ static bool addr_is_in_used_range(mm::phys_addr_t addr)
     return false;
 }
 
-static void* boot_mm_page_alloc(void)
+static auto boot_mm_page_alloc(void) -> void*
 {
     void *res;
 
@@ -147,10 +147,10 @@ static void* boot_mm_page_alloc(void)
  * map a single page on page table,
  * note that we SHOUDN'T FORGET to set the attr for each level's entry
 */
-int boot_mm_pgtable_map(mm::phys_addr_t pgtable,
-                        mm::virt_addr_t va,
-                        mm::phys_addr_t pa, 
-                        mm::page_attr_t attr)
+static auto boot_mm_pgtable_map(mm::phys_addr_t pgtable,
+                                mm::virt_addr_t va,
+                                mm::phys_addr_t pa, 
+                                mm::page_attr_t attr) -> int
 {
     pgd_t *pgd;
     pud_t *pud;
@@ -205,7 +205,7 @@ int boot_mm_pgtable_map(mm::phys_addr_t pgtable,
 
 mm::phys_addr_t boot_kern_pgtable;
 
-static void boot_mm_load_pgtable(mm::phys_addr_t pgtable)
+static auto boot_mm_load_pgtable(mm::phys_addr_t pgtable) -> void
 {
     asm volatile(
         "mov    %0, %%rax;"
@@ -218,7 +218,7 @@ static void boot_mm_load_pgtable(mm::phys_addr_t pgtable)
 /**
  * Map physical memory region to corresponding virtual memory region
 */
-static int boot_mm_pgtable_init(void)
+static auto boot_mm_pgtable_init(void) -> int
 {
     struct elf64_shdr *shdr;
     void *shdr_end;
@@ -397,7 +397,7 @@ static int boot_mm_pgtable_init(void)
     return 0;
 }
 
-int boot_mm_page_database_init(void)
+static auto boot_mm_page_database_init(void) -> int
 {
     int ret;
 
@@ -462,7 +462,7 @@ int boot_mm_page_database_init(void)
     return 0;
 }
 
-extern "C" int boot_mm_init(multiboot_uint8_t *mbi)
+auto boot_mm_init(multiboot_uint8_t *mbi) -> int
 {
     struct multiboot_tag *tag;
     static struct multiboot_mmap_entry *mmap_entry;

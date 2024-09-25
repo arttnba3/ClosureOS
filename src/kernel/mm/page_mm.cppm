@@ -161,6 +161,8 @@ private:
     lib::ListHead freelist[MAX_PAGE_ORDER];
     lib::atomic::SpinLock lock;
 
+    auto __reinit_page(Page *p, base::size_t order, bool free) -> void;
+
     auto __alloc_page_direct(base::size_t order) -> Page *;
     auto __alloc_pages(base::size_t order) -> Page *;
 
@@ -182,9 +184,25 @@ PagePool::~PagePool(void)
     /* do nothing */
 }
 
+auto PagePool::__reinit_page(Page *p, base::size_t order, bool free) -> void
+{
+    for (auto i = 0; i < (1 << order); i++) {
+        p[i].is_free = free;
+        p[i].order = order;
+        p[i].freelist = nullptr;
+        p[i].kc = nullptr;
+        p[i].is_head = false;
+        lib::atomic::atomic_set(&p->ref_count, -1);
+        lib::atomic::atomic_set(&p->map_count, -1);
+    }
+
+    p[0].is_head = true;
+}
+
 auto PagePool::__alloc_page_direct(base::size_t order) -> Page *
 {
     Page *p = nullptr;
+    Page *buddy;
     base::size_t allocated = order;
 
     while (allocated < MAX_PAGE_ORDER) {
@@ -205,13 +223,15 @@ auto PagePool::__alloc_page_direct(base::size_t order) -> Page *
     /* it means that we acquire pages from higher order */
     if (allocated != order) {
         /* put half pages back to buddy */
-        allocated--;
-        while (allocated >= order) {
-            lib::list_add_next(&this->freelist[allocated],
-                               &get_page_buddy(p, allocated)->list);
+        do {
             allocated--;
-        }
+            buddy = get_page_buddy(p, allocated);
+            this->__reinit_page(buddy, allocated, true);
+            lib::list_add_next(&this->freelist[allocated], &buddy->list);
+        } while (allocated > order);
     }
+
+    this->__reinit_page(p, allocated, false);
 
 out:
     return p;
@@ -274,7 +294,7 @@ auto PagePool::__free_pages(Page *p, base::size_t order) -> void
         Page *buddy;
 
         buddy = get_page_buddy(p, order);
-        if (buddy->type == PAGE_NORMAL_MEM && buddy->is_free && buddy->is_head){
+        if (buddy->type == PAGE_NORMAL_MEM && buddy->is_free && buddy->is_head) {
             list_del(&buddy->list);
             if (buddy < p) {
                 p->is_head = false;
@@ -288,14 +308,7 @@ auto PagePool::__free_pages(Page *p, base::size_t order) -> void
         break;
     }
 
-    for (int i = 0; i < (1 << order); i++) {
-        p[i].is_head = false;
-        p[i].is_free = true;
-        p[i].order = order;
-        lib::atomic::atomic_set(&p->ref_count, -1);
-        lib::atomic::atomic_set(&p->map_count, -1);
-    }
-    p->is_head = true;
+    this->__reinit_page(p, order, true);
 
     list_add_next(&(this->freelist[order]), &p->list);
 
