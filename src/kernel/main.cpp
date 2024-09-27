@@ -5,7 +5,7 @@ import kernel.mm;
 #include <boot/multiboot2.h>
 #include <closureos/cpp_base.hpp>
 
-/* temporarily here, remove sooo... */
+/* temporarily here, remove sooon... */
 extern "C" {
 #include <boot/tty.h>
 };

@@ -1,7 +1,7 @@
 /**
  * Boot stage operations related to tty and graphic output.
  * 
- * Copyright (c) 2024 arttnba3 <arttnba@gmail.com>
+ * Copyright (c) 2024 arttnba3 <arttnba3@outlook.com>
  * 
  * This work is licensed under the terms of the GNU GPL, version 2 or later.
 */
@@ -553,7 +553,7 @@ int boot_tty_init(multiboot_uint8_t *mbi)
     boot_puts("Welcome to ClosureOS!");
     boot_puts("");
     boot_puts("Version 0.0.1");
-    boot_puts("Copyright(c) 2024 arttnba3 <arttnba@gmail.com>\n");
+    boot_puts("Copyright(c) 2024 arttnba3 <arttnba3@outlook.com>\n");
 
     return 0;
 }
