@@ -10,6 +10,7 @@ import kernel.lib;
 export namespace mm {
 
 class KMemCache;
+class PagePool;
 
 /**
  * Page-related definitions
@@ -37,6 +38,9 @@ enum migrate_type {
  * struct Page
  * - representing a `physical page frame`
  * - page-aligned size
+ * 
+ * NOTE: we ONLY store some critical information at the head page, as it takes too long to assign the value
+ * to every page, but only recording it at the head and to find the head at use is enough.
  */
 struct Page {
 public:
@@ -49,11 +53,12 @@ public:
         unsigned is_head: 1; /* head of a group of pages*/
         unsigned order: 4;
     };
-    lib::atomic::atomic_t ref_count;     /* used only for PAGE_NORMAL_MEM pages */
+    lib::atomic::atomic_t ref_count;     /* -1 for free */
     lib::atomic::atomic_t map_count;     /* mapped count in processes */
     lib::atomic::SpinLock lock;
     void **freelist;    /* used only when the slub is not a cpu partial */
     KMemCache *kc;  /* used only when it's a slub page */
+    PagePool *pool; /* SHOULD remains unchanged after initialization */
     base::size_t obj_nr;      /* used only when it's a slub page */
 
     /* unused area to make it page-aligned, maybe we can put sth else there? */
@@ -115,20 +120,6 @@ __always_inline struct Page *get_head_page(struct Page *p)
           : (struct Page*)((virt_addr_t) p & ~((sizeof(*p)*(1 << p->order))-1));
 }
 
-__always_inline void get_page(struct Page *p)
-{
-    lib::atomic::atomic_inc(&get_head_page(p)->ref_count);
-}
-
-__always_inline void put_page(struct Page *p)
-{
-    p = get_head_page(p);
-
-    if (lib::atomic::atomic_dec(&p->ref_count) < 0) {
-        //free_pages(p, p->order);
-    }
-}
-
 /**
  * Page memory pool (Buddy system)
  */
@@ -155,7 +146,9 @@ public:
     auto FreePages(Page *page, base::size_t order) -> void;
 
     /* for booting stage only */
-    auto Reset(void) -> void;
+
+    auto Init(void) -> void;
+    auto AddPages(Page *page, base::size_t order) -> void;
 
 private:
     lib::ListHead freelist[MAX_PAGE_ORDER];
@@ -171,8 +164,30 @@ private:
     auto __reclaim_memory(void) -> void;
 };
 
+enum page_pool_types {
+    PAGE_POOL_TYPE_NORMAL = 0,
+    PAGE_POOL_TYPE_NR,
+};
+
 base::uint8_t GloblPagePoolMem[sizeof(PagePool)]; /* to avoid calling global initializer, we manually point it to mem */
 PagePool *GloblPagePool = (PagePool*) &GloblPagePoolMem;
+PagePool *GloblPagePoolGroup[PAGE_POOL_TYPE_NR] = {
+    (PagePool*) &GloblPagePoolMem,
+};
+
+__always_inline void get_page(struct Page *p)
+{
+    lib::atomic::atomic_inc(&get_head_page(p)->ref_count);
+}
+
+__always_inline void put_page(struct Page *p)
+{
+    p = get_head_page(p);
+
+    if (lib::atomic::atomic_dec(&p->ref_count) < 0) {
+        p->pool->FreePages(p, p->order);
+    }
+}
 
 PagePool::PagePool(void)
 {
@@ -252,15 +267,6 @@ redo:
     /* try to alloc directly */
     p = this->__alloc_page_direct(order);
     if (p) {
-        for (int i = 0; i < (1 << order); i++) {
-            p[i].is_head = false;
-            p[i].order = order;
-            p->is_free = false;
-            list_head_init(&p[i].list);
-        }
-
-        p->is_head = true;
-
         goto out;
     }
 
@@ -294,7 +300,7 @@ auto PagePool::__free_pages(Page *p, base::size_t order) -> void
         Page *buddy;
 
         buddy = get_page_buddy(p, order);
-        if (buddy->type == PAGE_NORMAL_MEM && buddy->is_free && buddy->is_head) {
+        if (buddy->type == PAGE_NORMAL_MEM && buddy->is_head && buddy->is_free) {
             list_del(&buddy->list);
             if (buddy < p) {
                 p->is_head = false;
@@ -330,13 +336,22 @@ auto PagePool::FreePages(Page *page, base::size_t order) -> void
     this->__free_pages(page, order);
 }
 
-auto PagePool::Reset(void) -> void
+auto PagePool::Init(void) -> void
 {
     for (auto i = 0; i < MAX_PAGE_ORDER; i++) {
         lib::list_head_init(&this->freelist[i]);
     }
 
     this->lock.Reset();
+}
+
+auto PagePool::AddPages(Page *page, base::size_t order) -> void
+{
+    for (auto i = 0; i < (1 << order); i++) {
+        page->pool = this;  /* shoudl NOT be changed after initialization */
+    }
+
+    this->FreePages(page, order);
 }
 
 };

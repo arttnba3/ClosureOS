@@ -412,16 +412,18 @@ static auto boot_mm_page_database_init(void) -> int
 
         while (base < end) {
             pfn = base / PAGE_SIZE;
-            mm::pgdb_base[pfn].migrate_type = mm::MIGRATE_UNMOVABLE;
+            /* initialized value for every page */
+            mm::pgdb_base[pfn].migrate_type = mm::MIGRATE_UNMOVABLE;    /* temporarily only this only */
             mm::pgdb_base[pfn].lock.Reset();
+            mm::pgdb_base[pfn].kc = nullptr;
+            mm::pgdb_base[pfn].pool = nullptr;
+            mm::pgdb_base[pfn].freelist = nullptr;
+            mm::pgdb_base[pfn].obj_nr = 0;
             lib::list_head_init(&mm::pgdb_base[pfn].list);
 
             switch (mmap_tag->entries[i].type) {
             case MULTIBOOT_MEMORY_AVAILABLE:
                 mm::pgdb_base[pfn].type = mm::PAGE_NORMAL_MEM;
-                mm::pgdb_base[pfn].kc = nullptr;
-                mm::pgdb_base[pfn].freelist = nullptr;
-                mm::pgdb_base[pfn].obj_nr = 0;
 
                 if (base < curr_avail || addr_is_in_used_range(base)) {
                     /* used page */
@@ -433,18 +435,23 @@ static auto boot_mm_page_database_init(void) -> int
                 break;
             case MULTIBOOT_MEMORY_RESERVED:
                 mm::pgdb_base[pfn].type = mm::PAGE_RESERVED;
+                lib::atomic::atomic_set(&mm::pgdb_base[pfn].ref_count, 0);
                 break;
             case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
                 mm::pgdb_base[pfn].type = mm::PAGE_ACPI_RECLAIMABLE;
+                lib::atomic::atomic_set(&mm::pgdb_base[pfn].ref_count, 0);
                 break;
             case MULTIBOOT_MEMORY_NVS:
                 mm::pgdb_base[pfn].type = mm::PAGE_NVS;
+                lib::atomic::atomic_set(&mm::pgdb_base[pfn].ref_count, 0);
                 break;
             case MULTIBOOT_MEMORY_BADRAM:
                 mm::pgdb_base[pfn].type = mm::PAGE_BADRAM;
+                lib::atomic::atomic_set(&mm::pgdb_base[pfn].ref_count, 0);
                 break;
             default:
                 mm::pgdb_base[pfn].type = mm::PAGE_UNKNOWN;
+                lib::atomic::atomic_set(&mm::pgdb_base[pfn].ref_count, 0);
                 /*
                 boot_printstr("[!] Warning: unknown memory type [");
                 boot_printnum(mmap_tag->entries[i].type);

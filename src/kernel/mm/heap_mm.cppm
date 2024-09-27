@@ -297,15 +297,24 @@ public:
     KHeapPool(void);
     ~KHeapPool();
 
-    auto Malloc(base::size_t sz) -> void*;
+    auto Malloc(base::size_t size) -> void*;
     auto Free(void *obj) -> void;
 
-    auto Init(KMemCache **caches, base::size_t cache_nr, base::size_t *cache_obj_sizes) -> void;
+    auto Init(void) -> void;
+    auto SetKMemCaches(KMemCache **caches, base::size_t cache_nr, base::size_t *cache_obj_sizes) -> void;
+    auto SetPagePools(PagePool **pools, base::size_t pool_nr) -> void;
 
 private:
     KMemCache **caches;
     base::size_t cache_nr;
     base::size_t *cache_obj_sizes;
+
+    auto __malloc_caches(base::size_t size) -> void*;
+
+    PagePool **pools;
+    base::size_t pool_nr;
+
+    auto __malloc_pools(base::size_t size) -> void*;
 };
 
 static base::uint8_t GloblKHeapPoolMem[sizeof(KHeapPool)];
@@ -321,12 +330,24 @@ KHeapPool::~KHeapPool()
     /* do nothing */
 }
 
-auto KHeapPool::Malloc(base::size_t sz) -> void*
+auto KHeapPool::Malloc(base::size_t size) -> void*
+{
+    void *obj = nullptr;
+
+    obj = this->__malloc_caches(size);
+    if (!obj) {
+        obj = this->__malloc_pools(size);
+    }
+
+    return obj;
+}
+
+auto KHeapPool::__malloc_caches(base::size_t size) -> void*
 {
     void *obj = nullptr;
 
     for (auto i = 0; i < this->cache_nr; i++) {
-        if (sz < this->cache_obj_sizes[i]) {
+        if (size <= this->cache_obj_sizes[i]) {
             obj = this->caches[i]->Malloc();
             if (obj) {
                 break;
@@ -334,9 +355,34 @@ auto KHeapPool::Malloc(base::size_t sz) -> void*
         }
     }
 
-    /* TODO: add large size alloc */
-
     return obj;
+}
+
+auto KHeapPool::__malloc_pools(base::size_t size) -> void*
+{
+    base::size_t order = 0, need = size;
+    Page *obj;
+
+    size >>= (PAGE_SHIFT + 1);
+    while (size > 0) {
+        order++;
+        size >>= 1;
+    }
+
+    if (((1 << order) * PAGE_SIZE) < need) {
+        order++;
+    }
+
+    for (auto i = 0; i < this->pool_nr; i++) {
+        obj = this->pools[i]->AllocPages(order);
+        if (obj) {
+            get_page(obj);
+            return (void*) page_to_virt(obj);
+        }
+    }
+
+    /* we failed unexpectedly :( */
+    return nullptr;
 }
 
 auto KHeapPool::Free(void *obj) -> void
@@ -344,7 +390,7 @@ auto KHeapPool::Free(void *obj) -> void
     Page *page;
 
     page = get_head_page(virt_to_page((virt_addr_t) obj));
-    if (!page->kc) { /* TODO: add initializer for kc */
+    if (!page->kc) {
         put_page(page);
         return ;
     }
@@ -352,11 +398,27 @@ auto KHeapPool::Free(void *obj) -> void
     page->kc->Free(page, obj);
 }
 
-auto KHeapPool::Init(KMemCache **caches, base::size_t cache_nr, base::size_t *cache_obj_sizes) -> void
+auto KHeapPool::Init(void) -> void
+{
+    this->caches = nullptr;
+    this->cache_nr = 0;
+    this->cache_obj_sizes = 0;
+
+    this->pools = nullptr;
+    this->pool_nr = 0;
+}
+
+auto KHeapPool::SetKMemCaches(KMemCache **caches, base::size_t cache_nr, base::size_t *cache_obj_sizes) -> void
 {
     this->caches = caches;
     this->cache_nr = cache_nr;
     this->cache_obj_sizes = cache_obj_sizes;
+}
+
+auto KHeapPool::SetPagePools(PagePool **pools, base::size_t pool_nr) -> void
+{
+    this->pools = pools;
+    this->pool_nr = pool_nr;
 }
 
 };
