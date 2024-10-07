@@ -300,6 +300,9 @@ public:
     auto Malloc(base::size_t size) -> void*;
     auto Free(void *obj) -> void;
 
+    auto PageAlloc(base::size_t order) -> Page*;
+    auto PageFree(Page *p) -> void;
+
     auto Init(void) -> void;
     auto SetKMemCaches(KMemCache **caches, base::size_t cache_nr, base::size_t *cache_obj_sizes) -> void;
     auto SetPagePools(PagePool **pools, base::size_t pool_nr) -> void;
@@ -396,6 +399,32 @@ auto KHeapPool::Free(void *obj) -> void
     }
 
     page->kc->Free(page, obj);
+}
+
+auto KHeapPool::PageAlloc(base::size_t order) -> Page*
+{
+    Page *p;
+
+    for (auto i = 0; i < this->pool_nr; i++) {
+        p = this->pools[i]->AllocPages(order);
+        if (p) {
+            return p;
+        }
+    }
+
+    /* we failed unexpectedly :( */
+    return nullptr;
+}
+
+auto KHeapPool::PageFree(Page *p) -> void
+{
+    /**
+     * XXX: We might need to check whether p->pool belongs to this KHeapPool in the future
+     */
+    if (p) {
+        p = get_head_page(p);
+        p->pool->FreePages(p, p->order);
+    }
 }
 
 auto KHeapPool::Init(void) -> void
