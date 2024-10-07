@@ -1,11 +1,12 @@
 export module kernel.lib.atomic;
 
-#include <closureos/types.h>
+import kernel.base;
+
 #include <closureos/compiler.h>
 
 export namespace lib::atomic {
 
-typedef volatile int32_t atomic_t;
+typedef volatile base::int32_t atomic_t;
 
 template <typename PtrType, typename OldValType, typename NewValType>
 __always_inline auto atomic_compare_and_swap(PtrType ptr, OldValType oldval, NewValType newval) -> bool

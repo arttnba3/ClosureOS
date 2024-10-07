@@ -19,3 +19,8 @@ target_sources(${TARGET_NAME}
     PRIVATE
         ${CXX_SOURCE_FILE}
 )
+
+target_link_libraries(
+    ${TARGET_NAME}
+    Kernel.Base
+)
