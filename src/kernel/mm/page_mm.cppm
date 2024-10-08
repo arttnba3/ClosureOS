@@ -73,63 +73,63 @@ inline constexpr base::size_t PGDB_PG_PAGE_NR = (PAGE_SIZE / sizeof(Page));
 
 /* page operations */
 
-__always_inline pfn_t page_to_pfn(Page *p)
+__always_inline auto page_to_pfn(Page *p) -> pfn_t
 {
     return p - pgdb_base;
 }
 
-__always_inline Page* pfn_to_page(pfn_t pfn)
+__always_inline auto pfn_to_page(pfn_t pfn) -> Page*
 {
     return &pgdb_base[pfn];
 }
 
-__always_inline phys_addr_t page_to_phys(Page *p)
+__always_inline auto page_to_phys(Page *p) -> phys_addr_t
 {
     return (p - pgdb_base) * PAGE_SIZE;
 }
 
-__always_inline virt_addr_t page_to_virt(Page *p)
+__always_inline auto page_to_virt(Page *p) -> virt_addr_t
 {
     return physmem_base + page_to_phys(p);
 }
 
-__always_inline phys_addr_t virt_to_phys(virt_addr_t addr)
+__always_inline auto virt_to_phys(virt_addr_t addr) -> phys_addr_t
 {
     return addr - physmem_base;
 }
 
-__always_inline virt_addr_t phys_to_virt(phys_addr_t addr)
+__always_inline auto phys_to_virt(phys_addr_t addr) -> virt_addr_t
 {
     return addr + physmem_base;
 }
 
-__always_inline Page* phys_to_page(phys_addr_t addr)
+__always_inline auto phys_to_page(phys_addr_t addr) -> Page*
 {
     return &pgdb_base[(addr & PAGE_MASK) / PAGE_SIZE];
 }
 
-__always_inline Page* virt_to_page(virt_addr_t addr)
+__always_inline auto virt_to_page(virt_addr_t addr) -> Page*
 {
     return phys_to_page(virt_to_phys(addr));
 }
 
-__always_inline struct Page *get_head_page(struct Page *p)
+__always_inline auto get_head_page(Page *p) -> Page*
 {
     return p->is_head 
           ? p 
-          : (struct Page*)((virt_addr_t) p & ~((sizeof(*p)*(1 << p->order))-1));
+          : (Page*)((virt_addr_t) p & ~((sizeof(*p)*(1 << p->order))-1));
 }
 
 /**
  * Page memory pool (Buddy system)
  */
 
-__always_inline size_t buddy_page_pfn(pfn_t pfn, int order)
+__always_inline auto buddy_page_pfn(pfn_t pfn, int order) -> base::size_t
 {
     return pfn ^ (1 << order);
 }
 
-__always_inline Page* get_page_buddy(Page *p, int order)
+__always_inline auto get_page_buddy(Page *p, int order) -> Page*
 {
     pfn_t pfn = page_to_pfn(p);
     return pfn_to_page(buddy_page_pfn(pfn, order));
@@ -175,12 +175,12 @@ PagePool *GloblPagePoolGroup[PAGE_POOL_TYPE_NR] = {
     (PagePool*) &GloblPagePoolMem,
 };
 
-__always_inline void get_page(struct Page *p)
+__always_inline auto get_page(struct Page *p) -> void
 {
     lib::atomic::atomic_inc(&get_head_page(p)->ref_count);
 }
 
-__always_inline void put_page(struct Page *p)
+__always_inline auto put_page(struct Page *p) -> void
 {
     p = get_head_page(p);
 
