@@ -29,6 +29,7 @@ struct dtor_info {
 
 extern "C" {
     extern int (*__init_array)(void);
+    extern int (*__init_array_end)(void);
     extern int __cxa_atexit ( void (*f)(void *), void *p, void *d );
     extern void __cxa_finalize(void* dso_handle);
     extern void* __dso_handle __attribute__((visibility("hidden")));

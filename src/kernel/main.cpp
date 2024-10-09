@@ -13,9 +13,10 @@ extern "C" {
 auto global_constructor_caller(void) -> int
 {
     int (**init_array)(void) = &__init_array;
+    int (**init_array_end)(void) = &__init_array_end;
     int error;
 
-    for (base::size_t i = 0; init_array[i]; i++) {
+    for (base::size_t i = 0; init_array[i] && ((init_array + i) < init_array_end); i++) {
         error = init_array[i]();
         if (error) {
             return error;

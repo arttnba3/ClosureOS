@@ -84,6 +84,7 @@ SECTIONS
 
 		__init_array = .;
 		*(.init_array)
+		__init_array_end = .;
 		__fini_array = .;
 		*(.fini_array)
 	}
